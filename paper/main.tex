@@ -77,8 +77,8 @@ anytime-valid simulation lemma that converts the running, empirically certified 
 error into a time-uniform bound on the $h$-step value gap; and an order-optimal bound on
 the delay to detect a faithfulness breach. Empirically, we validate each theorem on a
 controllable latent simulator where ground truth is known, demonstrate ATLAS on real
-image sequences---including egocentric driving video---under several qualitatively
-different distribution shifts, and monitor learned neural world models trained on a GPU.
+image sequences---including egocentric driving and aerial-drone video---under several
+qualitatively different distribution shifts, and monitor learned neural world models trained on a GPU.
 In every setting the trust horizon collapses precisely when reality diverges from
 imagination, while offline metrics remain blind.
 \end{abstract}
@@ -203,10 +203,10 @@ bound on the $h$-step value gap---to our knowledge the first time-uniform versio
 simulation lemma; and an order-optimal detection-delay bound under a drift alternative.
 \item \textbf{A three-tier empirical study} (Section~\ref{sec:experiments}): a ground-truth
 validation of all three theorems on a controllable latent simulator; real-data demonstrations
-on Moving MNIST, the KTH human-action dataset, and KITTI ego-view driving video under speed,
-gait, domain, and ego-motion shifts; and ATLAS monitoring learned neural world models---a
-convolutional autoencoder and a JEPA-style frozen-encoder model---on a GPU. The trust horizon
-collapses when the shift opens; offline metrics do not react.
+on Moving MNIST, the KTH human-action dataset, KITTI ego-view driving video, and aerial UAV
+navigation under speed, gait, domain, and ego-motion shifts; and ATLAS monitoring learned neural
+world models---a convolutional autoencoder and a JEPA-style frozen-encoder model---on a GPU. The trust
+horizon collapses when the shift opens; offline metrics do not react.
 \end{enumerate}
 
 \subsection{Related work}\label{sec:related}
@@ -654,9 +654,9 @@ simulator where the ground-truth dynamics---and hence the true faithfulness---ar
 (Section~\ref{sec:exp-synth}); this is the only setting in which the guarantees can be checked against
 truth, since for a real world model ``truth'' is unobserved. We then move to real image-sequence data
 (Section~\ref{sec:exp-real}) and to learned neural world models trained on a GPU
-(Section~\ref{sec:exp-gpu}). Across these tiers we study \emph{three real-world datasets}---Moving MNIST,
-the KTH human-action videos, and KITTI egocentric autonomous-driving video---spanning speed, gait, domain,
-and ego-motion shifts.
+(Section~\ref{sec:exp-gpu}). Across these tiers we study \emph{four image-sequence datasets}---Moving MNIST,
+the KTH human-action videos, KITTI egocentric autonomous-driving video, and aerial UAV navigation---spanning
+speed, gait, domain, and ego-motion shifts, on both a ground vehicle and an aerial vehicle.
 
 \subsection{Ground-truth validation of the three theorems}\label{sec:exp-synth}
 
@@ -724,8 +724,8 @@ dynamics model, a deliberately lightweight but genuine latent simulator---on rea
 tolerance $\eps_h$ is calibrated on held-out in-distribution clips, on the same statistic the test consumes
 (real-video score excess is heavy-tailed, so a naive window-level calibration is mis-scaled); deployment
 then runs in-distribution before switching regime at a known round. This subsection studies three shifts
-on Moving MNIST and KTH; the learned neural world models of Section~\ref{sec:exp-gpu} then add a third
-real dataset, KITTI autonomous-driving video, under an ego-motion shift.
+on Moving MNIST and KTH; the learned neural world models of Section~\ref{sec:exp-gpu} then add two more
+egocentric datasets---KITTI autonomous-driving video and aerial UAV navigation---both under ego-motion shifts.
 
 \emph{Moving MNIST \citep{srivastava2015movingmnist}: a speed (dynamics) shift.} The stream runs at the
 native frame rate, then switches to double speed---a dynamics change the native-rate model cannot track.
@@ -760,7 +760,7 @@ the two dynamics shifts, partially for the subtle domain shift.}
 \label{fig:real}
 \end{figure}
 
-\subsection{Learned neural world models, including autonomous driving}\label{sec:exp-gpu}
+\subsection{Learned neural world models: autonomous driving and aerial navigation}\label{sec:exp-gpu}
 
 Finally we replace the linear world model with learned neural world models---which expose the same
 interface, namely a per-horizon predictive distribution scored against the realized outcome---to show that
@@ -780,9 +780,9 @@ identity) is what makes the certificate clean on real video, and a stronger worl
 state-space model can be substituted without any change to the certification procedure.
 
 \emph{Convolutional-autoencoder world model on KITTI ego-view driving: an ego-motion (dynamics)
-shift.} Our final and most safety-relevant setting is a vehicle-mounted forward camera, where a
-world model predicts its own future observations as the vehicle drives---the archetypal autonomous
-driving world model, here the KITTI benchmark \citep{geiger2013kitti}. We train the
+shift.} Our most safety-relevant settings are egocentric vehicles, and we begin with a vehicle-mounted
+forward camera, where a world model predicts its own future observations as the vehicle drives---the
+archetypal autonomous driving world model, here the KITTI benchmark \citep{geiger2013kitti}. We train the
 convolutional-autoencoder model on nominal-speed driving and
 deploy it on \emph{faster ego-motion}: a threefold temporal subsampling of held-out road segments,
 so the vehicle covers three times the distance per step. Crucially the scenes are held fixed between
@@ -825,27 +825,40 @@ revocation) and collapses to $0$ once the dynamics shift opens.}
 \label{fig:kitti-frontier}
 \end{figure}
 
-Three findings recur across all tiers and every real-world dataset. First, validity is never violated:
-during every in-distribution period, including the heavy-tailed nominal-speed driving stream, the wealth
-stays below the threshold and $\hstar$ holds, matching Theorem~\ref{thm:validity}. Second, the frontier
+Three findings recur across all tiers and all four datasets. First, validity is never violated:
+during every in-distribution period, including the heavy-tailed nominal-speed driving and flight streams,
+the wealth stays below the threshold and $\hstar$ holds, matching Theorem~\ref{thm:validity}. Second, the frontier
 collapses at the shift---sharply for dynamics shifts (speed, gait, ego-motion) and partially for a subtle
 appearance shift---always before an offline metric would react, indeed the offline horizon never reacts at
 all. Third, the behavior is model-agnostic, holding for linear, convolutional-autoencoder, and JEPA-style
 world models, as the theory requires.
 
-Nothing in the construction is specific to driving. The certification interface---a per-horizon predictive
-distribution scored against the realized observation---applies verbatim to any egocentric world model. A
-second safety-critical instance is aerial drone navigation, where a model predicts its own future view as
-the vehicle flies (Figure~\ref{fig:drone}). We are extending the same ego-motion monitoring study to this
-aerial domain; we include representative frames here to make the breadth of applicable settings concrete.
+\emph{Convolutional-autoencoder world model on aerial drone navigation: a second ego-motion shift.} Nothing
+in the construction is specific to driving. To show this, we repeat the ego-motion experiment on a second
+egocentric domain: a forward-facing camera on an unmanned aerial vehicle navigating an urban environment,
+from the Multi-View UAV dataset \citep{fang2025uav} collected in the CARLA simulator \citep{dosovitskiy2017carla}.
+The protocol mirrors the driving experiment exactly---train on nominal-speed flight, deploy on threefold
+ego-speed with the scenes held fixed (Figure~\ref{fig:drone-frames}), disjoint splits throughout---so only
+the flight dynamics change. The outcome mirrors it too (Figure~\ref{fig:drone-frontier}): the trust horizon
+holds at $\hstar=3$ through the entire nominal-speed flight with no false revocation, then collapses to $0$
+once the ego-speed triples. That the identical procedure, unchanged, certifies both a ground vehicle and an
+aerial vehicle is the model- and domain-agnosticism of ATLAS made concrete.
 
 \begin{figure}[t]\centering
 \includegraphics[width=\textwidth]{figures/drone_frames.png}
-\caption{Egocentric aerial drone video (Dronescapes \citep{pirvu2023dronescapes}): forward frames from a
-UAV flying over terrain. Together with the KITTI driving stream (Figure~\ref{fig:kitti-frames}), this
-illustrates the egocentric world-model settings---autonomous driving and aerial navigation---that ATLAS is
-designed to certify; the same scoring interface and guarantees apply without modification.}
-\label{fig:drone}
+\caption{Egocentric aerial UAV forward view (Multi-View UAV \citep{fang2025uav}, CARLA). Top: consecutive
+nominal-speed frames; bottom: the same scene at threefold ego-speed. As in the driving experiment the scene
+is held fixed and only the dynamics change, isolating a pure world-model faithfulness breach.}
+\label{fig:drone-frames}
+\end{figure}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.86\textwidth]{figures/neural_drone_gpu.png}
+\caption{ATLAS monitoring a convolutional-autoencoder aerial-drone world model under an ego-motion shift.
+Top: per-horizon log-wealth stays below the reject threshold (dashed) throughout nominal-speed flight, then
+climbs past it after the ego-speed triples (dotted line). Bottom: the trust horizon $\hstar(t)$ holds at $3$
+through the entire nominal period (no false revocation) and collapses to $0$ once the dynamics shift opens.}
+\label{fig:drone-frontier}
 \end{figure}
 
 \subsection{Comparison with competitor monitors}\label{sec:exp-baselines}
@@ -940,8 +953,9 @@ not-for-profit sectors.
 
 \section*{Data and code availability}
 The methods and all reported experiments are reproducible from an accompanying open implementation together
-with the publicly available Moving MNIST, KTH Actions, and KITTI datasets. No new data were generated. The
-experiments use no human subjects or personal data beyond these established public benchmarks.
+with the publicly available Moving MNIST, KTH Actions, KITTI, and Multi-View UAV (CARLA) datasets. No new
+data were generated. The experiments use no human subjects or personal data beyond these established public
+benchmarks.
 
 \bibliographystyle{elsarticle-harv}
 \bibliography{references}
