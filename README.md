@@ -76,11 +76,14 @@ figures/                Real-data figures (sample frames + frontier collapse)
   `h*(t)` collapses when the real shift opens (fully for dynamics, partially for the
   subtle domain shift). Run: `python -m experiments.real_data.download && python -m
   experiments.real_data.exp_mnist`.
-- **Neural world model (GPU-ready)** (`experiments/gpu/`): the same ATLAS frontier
-  monitoring a learned conv-autoencoder + latent-dynamics net (Dreamer/JEPA-lite),
-  behind an identical interface. Run: `python -m experiments.gpu.run_neural
-  --dataset mnist` (add `--smoke` for CPU). See `experiments/gpu/README.md` for
-  Colab GPU instructions.
+- **Neural world models on GPU** (`experiments/gpu/`, run on a real Colab T4 via the
+  official `google-colab-cli`): the same ATLAS frontier monitoring *learned* world
+  models behind an identical interface — a conv-autoencoder WM on Moving MNIST
+  (`figures/neural_mnist_gpu.png`, `h*` 3→0 at the speed shift) and a **JEPA-style**
+  WM (frozen ResNet encoder + latent dynamics) on KTH walking→running
+  (`figures/neural_kth_jepa_gpu.png`, valid walking null → `h*` collapse to 0). Run:
+  `python -m experiments.gpu.run_neural --dataset kth --model jepa`. See
+  `experiments/gpu/README.md`.
 
 ## Planned experiments (GPU phase)
 

@@ -63,24 +63,40 @@ are git-ignored).
 
 ## GPU run findings (Colab T4, official google-colab-cli)
 
-Both runs were executed on a real Colab **Tesla T4** via the official CLI
+All runs executed on a real Colab **Tesla T4** via the official CLI
 (`colab new --gpu T4`, `colab exec`, `colab download`).
 
-- **Moving MNIST — clean (committed: `figures/neural_mnist_gpu.png`).** With the
-  neural WM trained on GPU, the wealth is flat during the native-rate period (valid,
-  no false revocation) and `h*(t)` collapses 3→0 after the 2× speed shift. This
-  confirms the ATLAS guarantees hold behind a genuinely *learned* world model.
-- **KTH walking→running — needs a stronger WM.** The small conv-autoencoder + MLP
-  dynamics overfits the training subjects, so its held-out *walking* excess is
-  high and highly variable **at the clip level** — hard walking clips are scored as
-  poorly as running. No tolerance then separates the two, and `h*(t)` false-revokes
-  during the in-distribution period. This is a **world-model quality** limitation,
-  not an ATLAS one:
-  - the low-capacity **linear** WM generalizes more uniformly across subjects and
-    gives a *clean* KTH result (`figures/kth_frontier.png`, `h*` 3→0);
-  - the fix is a stronger video WM (DreamerV3 RSSM / a proper JEPA), which drops in
-    behind the same interface — the motivation for continuing this phase.
+- **Moving MNIST, conv-AE neural WM — clean (`figures/neural_mnist_gpu.png`).** Wealth
+  flat during the native-rate period (valid, no false revocation); `h*(t)` collapses
+  3→0 after the 2× speed shift. ATLAS's guarantees hold behind a *learned* WM.
+- **KTH walking→running, JEPA WM — clean (`figures/neural_kth_jepa_gpu.png`).** The
+  JEPA-style model (frozen ImageNet ResNet-18 encoder + learned latent dynamics,
+  `jepa_wm.py`) keeps `h*(t)=3` through the entire walking period (valid null) and
+  **collapses to 0** once running begins (all of h=1,2,3 revoked). The frozen
+  pretrained encoder generalizes across subjects, so the in-distribution walking
+  excess is low and stable (≈0.1 at h=1) while running is clearly separated (≈1.1) —
+  exactly the property the small conv-AE lacked.
+- **KTH with the small conv-AE WM — WM-limited.** The conv-AE overfits the training
+  subjects; its held-out walking excess is variable at the clip level and overlaps
+  running, so no tolerance cleanly separates them. This is a **world-model quality**
+  limitation, resolved by the stronger JEPA representation above (and the low-capacity
+  linear WM, which generalizes uniformly, is also clean: `figures/kth_frontier.png`).
 
-Takeaway: the GPU pipeline and ATLAS monitoring work end-to-end on real GPU; the
-neural-WM quality is now the bottleneck for hard real-video shifts, which is the
-expected and intended next step (roadmap 4c).
+Takeaway: the GPU pipeline works end-to-end via the official CLI, and a
+representation that generalizes across subjects (JEPA's frozen encoder) is what makes
+ATLAS's certificate clean on real video. A full DreamerV3 RSSM drops in behind the
+same `encode/predict/excess_stream` interface.
+
+### Gotcha: the Colab kernel persists across `colab exec` calls
+
+Each `colab exec` shares one long-lived Python kernel, so `import` returns **cached**
+modules — re-shipping edited code has no effect unless you purge them first. The VM
+bootstrap therefore runs, after extracting the code and before importing:
+
+```python
+for m in [k for k in list(sys.modules) if k.split('.')[0] in ("experiments","atlas")]:
+    del sys.modules[m]
+```
+
+(Or `colab stop && colab new` for a fresh kernel.) Missing this silently reruns stale
+code — worth knowing for any iterative use of the CLI.
