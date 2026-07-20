@@ -1,0 +1,205 @@
+% ATLAS — verified references (literature sweep, first pass).
+% Authors/years/titles verified against primary sources during the sweep; a few
+% exact page numbers / volume fields should be double-checked at submission time.
+
+% ---------------------------------------------------------------- Foundations
+@article{ville1939,
+  author = {Ville, Jean},
+  title  = {{\'E}tude critique de la notion de collectif},
+  journal = {Gauthier-Villars, Paris},
+  year   = {1939},
+  note   = {Origin of Ville's inequality for nonnegative supermartingales}
+}
+
+@book{vovk2005algorithmic,
+  author    = {Vovk, Vladimir and Gammerman, Alexander and Shafer, Glenn},
+  title     = {Algorithmic Learning in a Random World},
+  publisher = {Springer},
+  year      = {2005}
+}
+
+@book{shafer2019game,
+  author    = {Shafer, Glenn and Vovk, Vladimir},
+  title     = {Game-Theoretic Foundations for Probability and Finance},
+  publisher = {Wiley},
+  year      = {2019}
+}
+
+% ---------------------------------------------- Anytime-valid inference / betting
+@article{shafer2021testing,
+  author  = {Shafer, Glenn},
+  title   = {Testing by betting: A strategy for statistical and scientific communication},
+  journal = {Journal of the Royal Statistical Society: Series A},
+  volume  = {184}, number = {2}, pages = {407--431}, year = {2021}
+}
+
+@article{vovk2021evalues,
+  author  = {Vovk, Vladimir and Wang, Ruodu},
+  title   = {E-values: Calibration, combination and applications},
+  journal = {The Annals of Statistics},
+  volume  = {49}, number = {3}, pages = {1736--1754}, year = {2021}
+}
+
+@article{gruenwald2024safe,
+  author  = {Gr{\"u}nwald, Peter and de Heide, Rianne and Koolen, Wouter M.},
+  title   = {Safe testing},
+  journal = {Journal of the Royal Statistical Society: Series B},
+  volume  = {86}, number = {5}, year = {2024},
+  note    = {arXiv:1906.07801; introduces GRO/GROW e-variables}
+}
+
+@article{waudbysmith2024betting,
+  author  = {Waudby-Smith, Ian and Ramdas, Aaditya},
+  title   = {Estimating means of bounded random variables by betting},
+  journal = {Journal of the Royal Statistical Society: Series B},
+  volume  = {86}, number = {1}, pages = {1--27}, year = {2024},
+  note    = {arXiv:2010.09686; betting confidence sequences used by ATLAS}
+}
+
+@article{howard2021timeuniform,
+  author  = {Howard, Steven R. and Ramdas, Aaditya and McAuliffe, Jon and Sekhon, Jasjeet},
+  title   = {Time-uniform, nonparametric, nonasymptotic confidence sequences},
+  journal = {The Annals of Statistics},
+  volume  = {49}, number = {2}, pages = {1055--1080}, year = {2021}
+}
+
+@article{ramdas2023savi,
+  author  = {Ramdas, Aaditya and Gr{\"u}nwald, Peter and Vovk, Vladimir and Shafer, Glenn},
+  title   = {Game-theoretic statistics and safe anytime-valid inference},
+  journal = {Statistical Science},
+  volume  = {38}, number = {4}, pages = {576--601}, year = {2023},
+  note    = {arXiv:2210.01948; survey}
+}
+
+% ------------------------------------------------------ Sequential change detection
+@article{lorden1971,
+  author  = {Lorden, Gary},
+  title   = {Procedures for reacting to a change in distribution},
+  journal = {The Annals of Mathematical Statistics},
+  volume  = {42}, number = {6}, pages = {1897--1908}, year = {1971}
+}
+
+@article{lai1998information,
+  author  = {Lai, Tze Leung},
+  title   = {Information bounds and quick detection of parameter changes in stochastic systems},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {44}, number = {7}, pages = {2917--2929}, year = {1998}
+}
+
+@article{shin2024edetectors,
+  author  = {Shin, Jaehyeok and Ramdas, Aaditya and Rinaldo, Alessandro},
+  title   = {E-detectors: A nonparametric framework for sequential change detection},
+  journal = {The New England Journal of Statistics in Data Science},
+  year    = {2024},
+  note    = {arXiv:2203.03532}
+}
+
+% ------------------------------------------------------------- Conformal prediction
+@inproceedings{gibbs2021adaptive,
+  author    = {Gibbs, Isaac and Cand{\`e}s, Emmanuel},
+  title     = {Adaptive conformal inference under distribution shift},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2021}
+}
+
+@article{gibbs2024conformal,
+  author  = {Gibbs, Isaac and Cand{\`e}s, Emmanuel},
+  title   = {Conformal inference for online prediction with arbitrary distribution shifts},
+  journal = {Journal of Machine Learning Research},
+  year    = {2024},
+  note    = {arXiv:2208.08401}
+}
+
+@article{tibshirani2019covariate,
+  author  = {Tibshirani, Ryan J. and Barber, Rina Foygel and Cand{\`e}s, Emmanuel and Ramdas, Aaditya},
+  title   = {Conformal prediction under covariate shift},
+  journal = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year    = {2019}
+}
+
+% ------------------------------------------------------------- Proper scoring rules
+@article{gneiting2007strictly,
+  author  = {Gneiting, Tilmann and Raftery, Adrian E.},
+  title   = {Strictly proper scoring rules, prediction, and estimation},
+  journal = {Journal of the American Statistical Association},
+  volume  = {102}, number = {477}, pages = {359--378}, year = {2007}
+}
+
+% --------------------------------------------------- Model-based RL / simulation lemma
+@article{kearns2002near,
+  author  = {Kearns, Michael and Singh, Satinder},
+  title   = {Near-optimal reinforcement learning in polynomial time},
+  journal = {Machine Learning},
+  volume  = {49}, pages = {209--232}, year = {2002},
+  note    = {Simulation lemma}
+}
+
+@inproceedings{janner2019mbpo,
+  author    = {Janner, Michael and Fu, Justin and Zhang, Marvin and Levine, Sergey},
+  title     = {When to trust your model: Model-based policy optimization},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2019}
+}
+
+@inproceedings{lobel2024tightness,
+  author    = {Lobel, Sam and Gottesman, Omer and Konidaris, George},
+  title     = {An optimal tightness bound for the simulation lemma},
+  booktitle = {Reinforcement Learning Conference (RLC)},
+  year      = {2024},
+  note      = {arXiv:2406.16249}
+}
+
+% ------------------------------------------------------------------ World models
+@article{ha2018worldmodels,
+  author  = {Ha, David and Schmidhuber, J{\"u}rgen},
+  title   = {World models},
+  journal = {arXiv:1803.10122},
+  year    = {2018}
+}
+
+@article{hafner2023dreamerv3,
+  author  = {Hafner, Danijar and Pasukonis, Jurgis and Ba, Jimmy and Lillicrap, Timothy},
+  title   = {Mastering diverse domains through world models},
+  journal = {arXiv:2301.04104},
+  year    = {2023},
+  note    = {DreamerV3}
+}
+
+@inproceedings{assran2023ijepa,
+  author    = {Assran, Mahmoud and Duval, Quentin and Misra, Ishan and Bojanowski, Piotr and Vincent, Pascal and Rabbat, Michael and LeCun, Yann and Ballas, Nicolas},
+  title     = {Self-supervised learning from images with a joint-embedding predictive architecture (I-JEPA)},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2023}
+}
+
+@article{bardes2024vjepa,
+  author  = {Bardes, Adrien and Garrido, Quentin and Ponce, Jean and Chen, Xinlei and Rabbat, Michael and LeCun, Yann and Assran, Mahmoud and Ballas, Nicolas},
+  title   = {V-JEPA: Latent video prediction for visual representation learning},
+  journal = {arXiv preprint},
+  year    = {2024}
+}
+
+@article{unterthiner2018fvd,
+  author  = {Unterthiner, Thomas and van Steenkiste, Sjoerd and Kurach, Karol and Marinier, Rapha{\"e}l and Michalski, Marcin and Gelly, Sylvain},
+  title   = {Towards accurate generative models of video: A new metric and challenges},
+  journal = {arXiv:1812.01717},
+  year    = {2018},
+  note    = {Fr{\'e}chet Video Distance (FVD)}
+}
+
+% ---------------------------------------------------------------- Datasets used
+@inproceedings{schuldt2004kth,
+  author    = {Schuldt, Christian and Laptev, Ivan and Caputo, Barbara},
+  title     = {Recognizing human actions: A local {SVM} approach},
+  booktitle = {International Conference on Pattern Recognition (ICPR)},
+  year      = {2004},
+  note      = {KTH Actions dataset}
+}
+
+@inproceedings{srivastava2015movingmnist,
+  author    = {Srivastava, Nitish and Mansimov, Elman and Salakhutdinov, Ruslan},
+  title     = {Unsupervised learning of video representations using {LSTM}s},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2015},
+  note      = {Moving MNIST}
+}
