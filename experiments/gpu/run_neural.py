@@ -63,6 +63,8 @@ def _kth(smoke):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", choices=["mnist", "kth"], default="mnist")
+    ap.add_argument("--model", choices=["neural", "jepa"], default="neural",
+                    help="neural = conv-AE + dynamics; jepa = frozen ResNet + dynamics")
     ap.add_argument("--smoke", action="store_true", help="tiny config for CPU test")
     args = ap.parse_args()
     os.makedirs(FIG, exist_ok=True)
@@ -72,10 +74,14 @@ def main():
 
     ld = 16 if args.smoke else 64
     ep = 3 if args.smoke else 35
-    print(f"=== ATLAS + neural WM on {args.dataset} "
+    print(f"=== ATLAS + {args.model} WM on {args.dataset} "
           f"({'smoke' if args.smoke else 'full'}) ===")
-    wm = NeuralLatentWM(latent_dim=ld, img_size=32, epochs_ae=ep,
-                        epochs_dyn=ep).fit(train, horizons=HORIZONS)
+    if args.model == "jepa":
+        from experiments.gpu.jepa_wm import JEPALatentWM
+        wm = JEPALatentWM(latent_dim=ld, epochs_dyn=ep).fit(train, horizons=HORIZONS)
+    else:
+        wm = NeuralLatentWM(latent_dim=ld, img_size=32, epochs_ae=ep,
+                            epochs_dyn=ep).fit(train, horizons=HORIZONS)
     print("device:", wm.dev)
 
     val_ex = wm.raw_excess(val, HORIZONS, B=8.0)
@@ -127,7 +133,8 @@ def main():
     ax1.legend(frameon=False); ax1.set_title(r"$h^*(t)$ collapse — learned neural WM")
     fig.tight_layout()
     tag = "smoke" if args.smoke else "full"
-    out = os.path.join(FIG, f"neural_{args.dataset}_{tag}.png")
+    mtag = "" if args.model == "neural" else f"_{args.model}"
+    out = os.path.join(FIG, f"neural_{args.dataset}{mtag}_{tag}.png")
     fig.savefig(out, dpi=130); plt.close(fig)
     print(f"figure -> {os.path.abspath(out)}")
 
