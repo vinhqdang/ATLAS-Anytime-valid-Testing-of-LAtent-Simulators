@@ -1,0 +1,118 @@
+"""GPU phase — ATLAS monitoring a learned NEURAL latent world model.
+
+Swaps the linear latent WM for a conv-autoencoder + latent-dynamics net
+(``NeuralLatentWM``, Dreamer/JEPA-lite) and runs the same ATLAS frontier under a
+real distribution shift. Auto-uses CUDA if available.
+
+    # full run (GPU recommended)
+    python -m experiments.gpu.run_neural --dataset mnist
+    python -m experiments.gpu.run_neural --dataset kth
+
+    # quick CPU smoke test
+    python -m experiments.gpu.run_neural --dataset mnist --smoke
+
+See experiments/gpu/README.md for Colab / GPU-host instructions. A full DreamerV3 or
+JEPA model drops in behind the same ``encode/predict/excess_stream`` interface.
+"""
+
+from __future__ import annotations
+
+import os
+import argparse
+import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+from atlas.frontier import FaithfulnessFrontier
+from experiments.gpu.neural_wm import NeuralLatentWM
+
+FIG = os.path.join(os.path.dirname(__file__), "..", "..", "figures")
+HORIZONS = [1, 2, 3]
+ALPHA = 0.05
+
+
+def _mnist(smoke):
+    from experiments.real_data.datasets import (load_moving_mnist,
+                                                moving_mnist_speed_shift)
+    n = 300 if smoke else 900
+    d = load_moving_mnist(n=n)[:, :, ::2, ::2]           # 32x32
+    a, b, c = (150, 200, 250) if smoke else (500, 700, 800)
+    train, val = list(d[:a]), list(d[a:b])
+    dep_id = list(d[b:c])
+    dep_od = [moving_mnist_speed_shift(s[None], 2)[0] for s in d[c:c + (c - b)]]
+    return train, val, dep_id, dep_od, "native", "2x-speed", "speed shift"
+
+
+def _kth(smoke):
+    from experiments.real_data.datasets import load_kth
+    mv = 30 if smoke else 60
+    walking = load_kth("walking", size=32, max_videos=mv, seq_len=40)
+    running = load_kth("running", size=32, max_videos=mv, seq_len=40)
+    n = len(walking)
+    return (walking[:n // 2], walking[n // 2:n // 2 + max(3, n // 4)],
+            walking[n // 2 + max(3, n // 4):], running,
+            "walking", "running", "walking->running")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dataset", choices=["mnist", "kth"], default="mnist")
+    ap.add_argument("--smoke", action="store_true", help="tiny config for CPU test")
+    args = ap.parse_args()
+    os.makedirs(FIG, exist_ok=True)
+
+    train, val, dep_id, dep_od, lab_id, lab_od, shift = (
+        _mnist(args.smoke) if args.dataset == "mnist" else _kth(args.smoke))
+
+    ld = 16 if args.smoke else 48
+    ep = 3 if args.smoke else 20
+    print(f"=== ATLAS + neural WM on {args.dataset} "
+          f"({'smoke' if args.smoke else 'full'}) ===")
+    wm = NeuralLatentWM(latent_dim=ld, img_size=32, epochs_ae=ep,
+                        epochs_dyn=ep).fit(train, horizons=HORIZONS)
+    print("device:", wm.dev)
+
+    val_ex = wm.raw_excess(val, HORIZONS, B=8.0)
+    od_ex = wm.raw_excess(dep_od, HORIZONS, B=8.0)
+    eps = {h: float(val_ex[h].mean() + 0.1 * val_ex[h].std()) for h in HORIZONS}
+    for h in HORIZONS:
+        print(f"  h={h}: {lab_id}(val) {val_ex[h].mean():+.2f} | "
+              f"{lab_od} {od_ex[h].mean():+.2f}  eps={eps[h]:.2f}")
+
+    fr = FaithfulnessFrontier(HORIZONS, eps=eps, z_lo=-1.0, z_hi=8.0, alpha=ALPHA)
+    hstar, wealth = [], {h: [] for h in HORIZONS}
+    t, cp = 0, None
+    for kind, c in [("id", c) for c in dep_id] + [("od", c) for c in dep_od]:
+        if kind == "od" and cp is None:
+            cp = t
+        for row in wm.excess_stream(c, HORIZONS):
+            if row:
+                fr.update(row); t += 1; hstar.append(fr.h_star)
+                for h in HORIZONS:
+                    wealth[h].append(fr.ep[h].log_wealth)
+    hstar = np.array(hstar)
+    print(f"h*: {lab_id} median={int(np.median(hstar[:cp]))}  "
+          f"{lab_od} final={hstar[-1]}  revoked={sorted(fr.revoked)}")
+
+    fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(9, 6.4), sharex=True)
+    thr = np.log(1.0 / fr.per_alpha)
+    for h in HORIZONS:
+        ax0.plot(wealth[h], lw=1.4, label=f"h={h}")
+    ax0.axhline(thr, color="crimson", ls="--", lw=1, label=r"reject $\log(1/\alpha_h)$")
+    ax0.axvline(cp, color="k", ls=":", lw=1.2, label=shift)
+    ax0.set_ylabel("log-wealth"); ax0.legend(frameon=False, ncol=3, fontsize=8)
+    ax0.set_title(f"ATLAS + neural latent WM — {args.dataset} ({shift})")
+    ax1.plot(hstar, color="#7a3b9d", lw=2.0, label=r"$h^*(t)$ ATLAS (neural WM)")
+    ax1.axvline(cp, color="k", ls=":", lw=1.2)
+    ax1.set_xlabel("deployment update"); ax1.set_ylabel(r"$h^*(t)$")
+    ax1.legend(frameon=False); ax1.set_title(r"$h^*(t)$ collapse — learned neural WM")
+    fig.tight_layout()
+    tag = "smoke" if args.smoke else "full"
+    out = os.path.join(FIG, f"neural_{args.dataset}_{tag}.png")
+    fig.savefig(out, dpi=130); plt.close(fig)
+    print(f"figure -> {os.path.abspath(out)}")
+
+
+if __name__ == "__main__":
+    main()

@@ -5,3 +5,5 @@ pytest>=7.0
 # real-data experiments (experiments/real_data)
 scikit-learn>=1.2
 imageio[ffmpeg]>=2.30
+# GPU phase — neural world model (experiments/gpu); CPU wheel works for smoke tests
+torch>=2.0

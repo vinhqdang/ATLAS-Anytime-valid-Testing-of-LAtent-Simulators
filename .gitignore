@@ -221,3 +221,6 @@ __marimo__/
 data/
 *.zip
 *.avi
+
+# neural-WM smoke figures (regenerate on GPU)
+figures/neural_*_smoke.png

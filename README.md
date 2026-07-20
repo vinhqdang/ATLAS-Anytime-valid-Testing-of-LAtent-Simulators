@@ -71,9 +71,16 @@ figures/                Real-data figures (sample frames + frontier collapse)
   metric stays blind; detection delay matches `(log 1/α + log m)/D*` to ~6%. Run:
   `python -m experiments.run_all`.
 - **Real-world data** (`figures/`): ATLAS monitors a learned latent world model on
-  **Moving MNIST** (native → 2× speed) and **KTH Actions** (walking → running);
-  `h*(t)` collapses right when the real shift opens. Run:
-  `python -m experiments.real_data.download && python -m experiments.real_data.exp_mnist`.
+  three real shifts — **Moving MNIST** (native → 2× speed), **KTH Actions**
+  walking → running (gait dynamics), and KTH outdoor → indoor (domain/appearance);
+  `h*(t)` collapses when the real shift opens (fully for dynamics, partially for the
+  subtle domain shift). Run: `python -m experiments.real_data.download && python -m
+  experiments.real_data.exp_mnist`.
+- **Neural world model (GPU-ready)** (`experiments/gpu/`): the same ATLAS frontier
+  monitoring a learned conv-autoencoder + latent-dynamics net (Dreamer/JEPA-lite),
+  behind an identical interface. Run: `python -m experiments.gpu.run_neural
+  --dataset mnist` (add `--smoke` for CPU). See `experiments/gpu/README.md` for
+  Colab GPU instructions.
 
 ## Planned experiments (GPU phase)
 
