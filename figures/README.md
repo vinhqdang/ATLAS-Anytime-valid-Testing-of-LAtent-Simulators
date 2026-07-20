@@ -11,36 +11,41 @@ Reproduce:
 
 ```bash
 pip install -r requirements.txt
-python -m experiments.real_data.download     # ~1.2 GB into data/ (git-ignored)
+python -m experiments.real_data.download     # ~1.4 GB into data/ (git-ignored)
 python -m experiments.real_data.exp_mnist
 python -m experiments.real_data.exp_kth
+python -m experiments.real_data.exp_kth_domain
 ```
 
-## Datasets
+## Datasets & shift types
 
-| dataset | source | shift | figures |
-|---------|--------|-------|---------|
-| Moving MNIST | U. Toronto video benchmark | native rate → 2× speed (temporal subsampling) | `mnist_frames.png`, `mnist_frontier.png` |
-| KTH Actions | KTH CVAP (real human action video) | **walking → running** (real dynamics change) | `kth_frames.png`, `kth_frontier.png` |
+| # | dataset | source | shift | kind | figures |
+|---|---------|--------|-------|------|---------|
+| 1 | Moving MNIST | U. Toronto video benchmark | native → 2× speed | dynamics | `mnist_frames.png`, `mnist_frontier.png` |
+| 2 | KTH Actions | KTH CVAP (real human video) | **walking → running** | dynamics (gait) | `kth_frames.png`, `kth_frontier.png` |
+| 3 | KTH Actions | KTH CVAP (real human video) | **outdoor → indoor** (same action) | domain / appearance | `kth_domain_frames.png`, `kth_domain_frontier.png` |
 
-`*_frames.png` are sample frames from each regime (manuscript images).
+`*_frames.png` are sample frames from each regime (manuscript images). Three
+distinct shift types across two datasets exercise ATLAS on real data.
 
 ## What the experiments show
 
-For each dataset the latent WM is fit on the in-distribution regime; ATLAS's
-tolerance `eps_h` is calibrated on held-out in-distribution clips (calibrated on the
-same **clipped** calibration statistic the e-process consumes — real-video excess is
+For each experiment the latent WM is fit on the in-distribution regime; ATLAS's
+tolerance `eps_h` is calibrated on held-out in-distribution clips (on the same
+**clipped** calibration statistic the e-process consumes — real-video excess is
 heavy-tailed); then deployment runs in-distribution and switches to the shifted
 regime at a known point.
 
-- **Moving MNIST** — during the native-rate period the per-horizon wealth is flat
-  (no depletion, valid) and `h*(t)=8`; after the 2× speed shift, the short/mid
-  horizons (h=1,2,3) cross the rejection threshold and **`h*(t)` collapses to 0**,
-  while an offline metric frozen at its pre-deployment value stays at 8 (blind).
-- **KTH Actions** — a walking-trained model is monitored; `h*(t)=3` throughout the
-  walking period (no false revocation), then **collapses to 0 after the subject
-  starts running**. The signal is strongest at short horizons (running differs from
-  walking most in fast dynamics).
+- **Moving MNIST (dynamics)** — the per-horizon wealth is flat during the
+  native-rate period (no depletion, valid), `h*(t)=8`; after the 2× speed shift,
+  horizons h=1,2,3 cross the threshold and **`h*(t)` collapses to 0**, while an
+  offline metric frozen at its pre-deployment value stays at 8 (blind).
+- **KTH walking → running (dynamics)** — `h*(t)=3` throughout walking (no false
+  revocation), then **collapses to 0** once running begins (all of h=1,2,3 revoked).
+- **KTH outdoor → indoor (domain)** — a subtler shift: `h*(t)=3` outdoors, then a
+  **partial collapse to 2** indoors (only the longest horizon h=3 is revoked). The
+  graded response (full collapse for strong dynamics shifts, partial for a subtle
+  domain shift) is itself informative.
 
 ## Honest caveats
 

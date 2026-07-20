@@ -68,16 +68,20 @@ def _read_avi_gray(path, size=32, max_frames=60):
 
 
 def load_kth(action, zip_path=None, size=32, max_videos=40, max_frames=60,
-             seq_len=40):
+             seq_len=40, scenario=None):
     """Load KTH ``action`` videos as a list of ``(seq_len, size, size)`` sequences.
 
     Decodes the ``.avi`` files inside the action zip, downscales to grayscale, and
-    chops each into fixed-length sequences.
+    chops each into fixed-length sequences. ``scenario`` (1=outdoors, 2=outdoors
+    zoom, 3=outdoors different clothes, 4=indoors) filters by recording condition,
+    which enables a domain/appearance shift (e.g. outdoor d1 -> indoor d4).
     """
     zip_path = zip_path or os.path.join(DATA, f"kth_{action}.zip")
     seqs = []
     with zipfile.ZipFile(zip_path) as zf:
         names = [n for n in zf.namelist() if n.lower().endswith(".avi")]
+        if scenario is not None:
+            names = [n for n in names if f"_d{scenario}_" in n]
         names = sorted(names)[:max_videos]
         tmp = os.path.join(DATA, "_kth_tmp")
         os.makedirs(tmp, exist_ok=True)
