@@ -47,8 +47,10 @@ def _mnist(smoke):
 def _kth(smoke):
     from experiments.real_data.datasets import load_kth
     mv = 30 if smoke else 100
-    walking = load_kth("walking", size=32, max_videos=mv, seq_len=40)
-    running = load_kth("running", size=32, max_videos=mv, seq_len=40)
+    # restrict to one recording scenario (outdoors, d1) so appearance is homogeneous
+    # and the shift is purely the gait dynamics (walking vs running)
+    walking = load_kth("walking", size=32, max_videos=mv, seq_len=40, scenario=1)
+    running = load_kth("running", size=32, max_videos=mv, seq_len=40, scenario=1)
     n = len(walking)
     train = walking[:n // 2]
     rest = walking[n // 2:]
