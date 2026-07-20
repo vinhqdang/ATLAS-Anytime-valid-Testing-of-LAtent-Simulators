@@ -41,30 +41,40 @@ def _mnist(smoke):
     train, val = list(d[:a]), list(d[a:b])
     dep_id = list(d[b:c])
     dep_od = [moving_mnist_speed_shift(s[None], 2)[0] for s in d[c:c + (c - b)]]
-    return train, val, dep_id, dep_od, "native", "2x-speed", "speed shift", 32
+    return train, val, dep_id, dep_od, "native", "2x-speed", "speed shift", 32, None
 
 
 def _kitti(smoke):
-    """KITTI ego-view driving: city drives (in-distribution) -> road drives (shift).
+    """KITTI ego-view driving -- an ego-motion (dynamics) shift.
 
-    A genuine world-model setting -- the model predicts its own future observations
-    as the vehicle drives. The scene/dynamics change from city to road (highway) is a
-    real distribution shift for a city-trained world model.
+    A world model predicting its own future observations while driving is trained on
+    nominal-speed ego-motion and deployed on faster ego-motion (2x frame skip, i.e.
+    the vehicle covers twice the distance per step). Crucially the *scenes are held
+    fixed*: the deploy-native and deploy-fast streams are the same held-out road
+    segments, so the appearance is identical and only the dynamics change -- an
+    unambiguous world-model faithfulness breach, the driving analogue of the Moving
+    MNIST speed shift. Splits are disjoint for fitting, covariance calibration, and
+    tolerance calibration, so no statistic is evaluated in-sample.
     """
     from experiments.real_data.datasets import load_kitti
-    city_ids = ["0011"] if smoke else ["0011", "0005", "0001", "0009", "0013"]
-    road_ids = ["0027"] if smoke else ["0027", "0015", "0029", "0032"]
-    city, road = [], []
-    for d in city_ids:
-        city += load_kitti(d, size=64, seq_len=20)
-    for d in road_ids:
-        road += load_kitti(d, size=64, seq_len=20)
-    np.random.default_rng(0).shuffle(city)
-    n = len(city); rest = city[n // 2:]
-    train = city[:n // 2]
-    val = rest[:max(3, len(rest) // 2)]
-    dep_id = rest[max(3, len(rest) // 2):]
-    return train, val, dep_id, road, "city", "road", "city->road shift", 64
+    ids = ["0011", "0009"] if smoke else ["0011", "0005", "0001", "0009", "0013",
+                                          "0027", "0015"]
+    segs = []
+    for d in ids:
+        segs += load_kitti(d, size=64, seq_len=40, stride=20)   # overlapping segments
+    np.random.default_rng(0).shuffle(segs)
+    SPEED = 3                                        # deploy ego-speed multiplier
+    native = [s[:len(s) // SPEED] for s in segs]     # nominal ego-speed
+    fast = [s[::SPEED] for s in segs]               # SPEEDx ego-speed, same scene start
+    n = len(native)
+    a, b, c = int(0.45 * n), int(0.65 * n), int(0.82 * n)
+    train = native[:a]
+    cov = native[a:b]                               # covariance calibration (disjoint)
+    val = native[b:c]                               # tolerance calibration (disjoint)
+    dep_id = native[c:]                             # held-out native deploy (validity)
+    dep_od = fast[c:]                               # same held-out scenes, SPEEDx speed
+    return (train, val, dep_id, dep_od, "native", f"{SPEED}x-speed",
+            "ego-speed shift", 64, cov)
 
 
 def _kth(smoke):
@@ -82,7 +92,7 @@ def _kth(smoke):
     np.random.default_rng(0).shuffle(rest)
     val = rest[:max(3, len(rest) // 2)]
     dep_id = rest[max(3, len(rest) // 2):]
-    return train, val, dep_id, running, "walking", "running", "walking->running", 32
+    return train, val, dep_id, running, "walking", "running", "walking->running", 32, None
 
 
 def main():
@@ -91,11 +101,15 @@ def main():
     ap.add_argument("--model", choices=["neural", "jepa"], default="neural",
                     help="neural = conv-AE + dynamics; jepa = frozen ResNet + dynamics")
     ap.add_argument("--smoke", action="store_true", help="tiny config for CPU test")
+    ap.add_argument("--recalib-cov", action="store_true",
+                    help="recalibrate predictive covariance on held-out val residuals "
+                         "(centres in-distribution excess near zero; needed for "
+                         "high-dim latents where in-sample residuals are optimistic)")
     args = ap.parse_args()
     os.makedirs(FIG, exist_ok=True)
 
     loaders = {"mnist": _mnist, "kth": _kth, "kitti": _kitti}
-    train, val, dep_id, dep_od, lab_id, lab_od, shift, img_size = loaders[args.dataset](args.smoke)
+    train, val, dep_id, dep_od, lab_id, lab_od, shift, img_size, cov = loaders[args.dataset](args.smoke)
 
     ld = 16 if args.smoke else 64
     ep = 3 if args.smoke else 35
@@ -107,6 +121,11 @@ def main():
     else:
         wm = NeuralLatentWM(latent_dim=ld, img_size=img_size, epochs_ae=ep,
                             epochs_dyn=ep).fit(train, horizons=HORIZONS)
+    if args.recalib_cov:
+        cov_set = cov if cov else val
+        wm.recalibrate(cov_set, HORIZONS)
+        print(f"recalibrated predictive covariance on held-out "
+              f"{'cov' if cov else 'val'} residuals ({len(cov_set)} clips)")
     print("device:", wm.dev)
 
     val_ex = wm.raw_excess(val, HORIZONS, B=8.0)
@@ -114,6 +133,11 @@ def main():
     if args.dataset == "mnist":
         # near-stationary WM: a tight window-level tolerance suffices
         eps = {h: float(val_ex[h].mean() + 0.1 * val_ex[h].std()) for h in HORIZONS}
+    elif args.dataset == "kitti":
+        # driving excess is heavy-tailed at the round level; calibrate the tolerance
+        # on the 90th percentile of the PER-ROUND held-out native excess so the
+        # in-distribution deploy stream stays a valid null (no false revocation).
+        eps = {h: float(np.quantile(val_ex[h], 0.90)) for h in HORIZONS}
     else:
         # real video is non-stationary across subjects: the window std badly
         # underestimates clip-to-clip variation, so calibrate eps on the spread of
@@ -128,6 +152,22 @@ def main():
     for h in HORIZONS:
         print(f"  h={h}: {lab_id}(val) {val_ex[h].mean():+.2f} | "
               f"{lab_od} {od_ex[h].mean():+.2f}  eps={eps[h]:.2f}")
+
+    # dump per-round excess streams (per clip) for offline eps calibration / analysis
+    def _clip_streams(clips):
+        out = {h: [] for h in HORIZONS}
+        for c in clips:
+            for row in wm.excess_stream(c, HORIZONS):
+                for h in HORIZONS:
+                    if h in row:
+                        out[h].append(row[h])
+        return {h: np.array(v) for h, v in out.items()}
+    dump = dict(dataset=args.dataset, model=args.model)
+    for name, clips in [("val", val), ("dep_id", dep_id), ("dep_od", dep_od)]:
+        s = _clip_streams(clips)
+        for h in HORIZONS:
+            dump[f"{name}_h{h}"] = s[h]
+    np.savez(os.path.join(FIG, f"dump_{args.dataset}_{args.model}.npz"), **dump)
 
     fr = FaithfulnessFrontier(HORIZONS, eps=eps, z_lo=-1.0, z_hi=8.0, alpha=ALPHA)
     hstar, wealth = [], {h: [] for h in HORIZONS}

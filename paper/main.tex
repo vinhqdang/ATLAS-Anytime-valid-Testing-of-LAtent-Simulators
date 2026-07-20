@@ -1,18 +1,15 @@
-%% Springer Nature LaTeX template (sn-jnl.cls, v3.1 Dec 2024)
-%% Target journal: Autonomous Robots (author-year "Basic" reference style)
-\documentclass[sn-basic]{sn-jnl}
+\documentclass[preprint,authoryear,12pt]{elsarticle}
 
-\usepackage{graphicx}
-\usepackage{amsmath,amssymb,amsfonts}
-\usepackage{amsthm}
-\usepackage{mathtools}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{bm}
+\usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{xcolor}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{enumitem}
 \usepackage{subcaption}
+\usepackage{hyperref}
 
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}
@@ -38,57 +35,70 @@
 \newcommand{\TV}{\mathrm{TV}}
 \newcommand{\defeq}{\vcentcolon=}
 
-\raggedbottom
+\journal{Neural Networks}
 
 \begin{document}
 
-\title[Anytime-valid Testing of Latent Simulators]{ATLAS: Anytime-valid Testing of
-Latent Simulators --- Sequential Certification of World-Model Faithfulness via
-E-Process Betting}
+\begin{frontmatter}
 
-\author*[1]{\fnm{Quang-Vinh} \sur{Dang}}\email{vinh.dq4@buv.edu.vn}
+\title{ATLAS: Anytime-valid Testing of Latent Simulators\\
+Sequential Certification of World-Model Faithfulness via E-Process Betting}
 
-\affil*[1]{\orgname{British University Vietnam}, \orgaddress{\city{Hung Yen},
-\country{Vietnam}}}
+\author[buv]{Quang-Vinh Dang}
+\ead{vinh.dq4@buv.edu.vn}
+\affiliation[buv]{organization={British University Vietnam}, city={Hung Yen}, country={Vietnam}}
 
-\abstract{A world model---a learned, action-conditioned simulator used for planning
-and model-based control in autonomous robots---is useful only insofar as its imagined
-rollouts remain faithful to reality. Faithfulness is, however, a moving target: it
-decays with the rollout horizon as recursive prediction compounds error, and it drifts
-over deployment time through non-stationarity, the sim-to-real gap, and the feedback
-loop of model-based reinforcement learning, in which an improving policy drives the
-robot into states the model never learned. Standard practice scores a world model
-once, offline, and is therefore blind to this degradation. We introduce ATLAS, which
-equips a deployed world model with a running, anytime-valid certificate: at every
-round it reports the largest horizon up to which rollouts are trustworthy at a chosen
-tolerance, with a guarantee that holds uniformly over time. ATLAS scores each horizon
-with a strictly proper scoring rule---making it agnostic to whether the model predicts
-pixels, latent states, or embeddings---and tests faithfulness by betting against it
-with a test martingale; combining the per-horizon e-processes yields a trust horizon
-that a planner may use to clip its imagination depth. Being conditional, the
-construction needs no exchangeability and remains valid under the policy-induced
-feedback that breaks conformal methods. We prove three guarantees---uniform validity,
-an anytime-valid simulation lemma, and an order-optimal detection-delay bound---and
-validate them on a controllable simulator, on real image sequences under three
-distribution shifts, and on learned neural world models trained on a graphics
-processing unit. In every case the trust horizon collapses precisely when reality
-diverges from imagination, while offline metrics remain blind.}
+\begin{abstract}
+A world model---a learned, action-conditioned simulator of an environment---is useful
+only insofar as its imagined rollouts remain \emph{faithful} to reality. Yet
+faithfulness is a moving target: it decays with the rollout horizon, because recursive
+prediction compounds one-step error, and it drifts over deployment time, because of
+non-stationarity, the sim-to-real gap, and the self-referential feedback loop of
+model-based reinforcement learning, in which an improving policy continually pushes the
+agent into regions the model never learned. The prevailing practice---scoring a world
+model once, offline, with metrics such as Fr\'echet Video Distance, PSNR, or held-out
+return gaps---is structurally incapable of tracking this degradation. We introduce
+ATLAS, a framework that equips a deployed world model with a running, statistically
+valid certificate of the form ``as of now, this model's rollouts are trustworthy up to
+horizon $\hstar(t)$ at tolerance $\eps$,'' with a guarantee that holds uniformly over
+all time. ATLAS scores each horizon with a strictly proper scoring rule---which makes it
+agnostic to the model's representation, covering pixel, latent, and embedding predictors
+alike---and tests the null hypothesis that the horizon is $\eps$-faithful by betting
+against it with a test martingale. Combining the resulting per-horizon e-processes yields
+the \emph{faithfulness frontier} $\hstar(t)$: a time-evolving trust horizon that a
+planner may legally use to clip its imagination depth, turning a passive monitor into an
+active controller. The construction is conditional---it places one bet at a time against
+a conditional-mean null---so it never invokes independence or exchangeability and remains
+valid on the endogenous, policy-dependent data stream that breaks conformal methods. We
+establish and prove three guarantees: a Ville-type theorem that a genuinely faithful
+horizon is revoked with probability at most $\alpha$, uniformly over all rounds; an
+anytime-valid simulation lemma that converts the running, empirically certified one-step
+error into a time-uniform bound on the $h$-step value gap; and an order-optimal bound on
+the delay to detect a faithfulness breach. Empirically, we validate each theorem on a
+controllable latent simulator where ground truth is known, demonstrate ATLAS on real
+image sequences---including egocentric driving video---under several qualitatively
+different distribution shifts, and monitor learned neural world models trained on a GPU.
+In every setting the trust horizon collapses precisely when reality diverges from
+imagination, while offline metrics remain blind.
+\end{abstract}
 
-\keywords{World models, World-model faithfulness, Anytime-valid inference,
-Model-based reinforcement learning, Sim-to-real, Sequential change detection}
+\begin{keyword}
+world models \sep anytime-valid inference \sep e-processes \sep sequential testing \sep
+model-based reinforcement learning \sep uncertainty quantification \sep change detection
+\end{keyword}
 
-\maketitle
+\end{frontmatter}
 
 \section{Introduction}\label{sec:intro}
 
-Consider a model-based robot midway through deployment. It has learned a world model of
+Consider a model-based agent midway through deployment. It has learned a world model of
 its environment and uses it constantly: at each step it imagines several possible
 futures, dozens of steps deep, and commits to the plan that looks best. For a while the
 imagined futures are excellent---the model was trained on exactly this kind of situation.
 But the world has quietly changed. A joint has worn, friction has increased, a payload
-has shifted; or the robot's own improving policy has carried it into a corner of the state
+has shifted; or the agent's own improving policy has carried it into a corner of the state
 space it has never visited before. The world model, oblivious, keeps producing confident
-rollouts, and the planner keeps trusting them. Nothing in the monitoring stack raises an
+rollouts, and the agent keeps trusting them. Nothing in its monitoring stack raises an
 alarm, because the only number anyone computed---an offline score on a held-out set,
 measured before deployment began---has not moved. The failure is silent, and by the time
 it manifests as a bad decision, the certificate that was supposed to guard against it has
@@ -96,7 +106,7 @@ long since gone stale.
 
 This scenario is the default, not the exception. World models---action-conditioned
 generative or predictive models of environment dynamics---have become central to modern
-robot autonomy and sequential decision making, from latent-imagination agents
+sequential decision making, from latent-imagination agents
 \citep{ha2018worldmodels,hafner2023dreamerv3} to joint-embedding predictive architectures
 \citep{assran2023ijepa,bardes2024vjepa} and large-scale video simulators. Their entire
 value proposition rests on \emph{faithfulness}: an imagined $h$-step future is useful only
@@ -112,7 +122,7 @@ non-stationary, there is an ever-present sim-to-real gap, and---most insidiously
 based reinforcement learning closes a feedback loop in which the policy that generates the
 data is itself optimized \emph{through} the model under test. As the policy improves it is
 driven toward states where the model predicts high value; if the model is optimistically
-wrong there, the robot is steered precisely into its blind spots. The data distribution is
+wrong there, the agent is steered precisely into its blind spots. The data distribution is
 thus \emph{endogenous}: it is a function of the very object we wish to audit.
 
 The dominant evaluation metrics---Fr\'echet Video Distance \citep{unterthiner2018fvd},
@@ -146,119 +156,132 @@ strictly proper scoring rule \citep{gneiting2007strictly} and bets against the n
 that the model is $\eps$-faithful at horizon $h$, accumulating wealth through a test
 martingale whenever the evidence contradicts the null
 \citep{shafer2021testing,gruenwald2024safe,waudbysmith2024betting}. It runs one such
-e-process per horizon and reports the faithfulness frontier $\hstar(t)$, the largest horizon
-all of whose e-processes have yet to reject---a time-evolving trust horizon. Because
-$\hstar(t)$ carries an anytime-valid guarantee, a planner may clip its rollout depth to
-$\hstar(t)$ at every step and inherit that guarantee, so ATLAS is not merely a monitor but a
-controller. The keystone is that every bet is placed \emph{conditionally}, requiring only that
-the expected wealth increment be at most one given the past; this constrains a single
-conditional expectation, so it holds for any predictable policy and betting rule, and the
-endogeneity that defeats exchangeability-based methods is handled automatically.
+e-process per horizon and reports the faithfulness frontier
+\[
+\hstar(t) = \text{the largest horizon all of whose e-processes have yet to reject,}
+\]
+a time-evolving trust horizon. Because $\hstar(t)$ carries an anytime-valid guarantee, a
+planner may clip its rollout depth to $\hstar(t)$ at every step and inherit that guarantee,
+so ATLAS is not merely a monitor but a controller. The keystone is that every bet is placed
+\emph{conditionally}, requiring only that the expected wealth increment be at most one given
+the past; this constrains a single conditional expectation, so it holds for any predictable
+policy and betting rule, and the endogeneity that defeats exchangeability-based methods is
+handled automatically.
+
 Figure~\ref{fig:teaser} previews the central phenomenon.
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.98\linewidth]{figures/exp2_frontier.png}
-\caption{The central phenomenon. A world model is faithful; a dynamics shift is injected
-mid-deployment (dashed line). Top: ATLAS's certified one-step faithfulness gap
-$\hat\delta_1(t)$ (an anytime-valid upper confidence sequence) stays low while the model is
-faithful and rises exactly when the shift opens, whereas an offline metric frozen at its
-pre-deployment value is blind. Bottom: the ATLAS trust horizon $\hstar(t)$ holds high while
-the model is faithful and collapses within a few rounds of the shift, while the
+\includegraphics[width=0.86\textwidth]{figures/exp2_frontier.png}
+\caption{\textbf{The central phenomenon.} A world model is faithful; a dynamics shift is
+injected mid-deployment (dashed line). \emph{Top:} ATLAS's certified one-step faithfulness
+gap $\hat\delta_1(t)$ (an anytime-valid upper confidence sequence) stays low while the model
+is faithful and rises exactly when the shift opens, whereas an offline metric frozen at its
+pre-deployment value is blind. \emph{Bottom:} the ATLAS trust horizon $\hstar(t)$ holds high
+while the model is faithful and collapses within a few rounds of the shift, while the
 offline-metric trust horizon remains dangerously optimistic. This work makes the collapse a
-theorem, not merely a curve}
+theorem, not merely a curve.}
 \label{fig:teaser}
 \end{figure}
 
 \subsection{Contributions}\label{sec:contrib}
 
 \begin{enumerate}[leftmargin=1.4em,itemsep=3pt]
-\item A \emph{conditional e-process construction for world-model faithfulness on endogenous
-streams} (Sections~\ref{sec:setup}--\ref{sec:method}). We formalize $\eps$-faithfulness as a
-horizon-indexed, conditional-mean null under the deployment filtration and build per-horizon
-test martingales by betting, using mixture (growth-rate-optimal) bets. We identify and
-resolve the recursive-multi-step validity problem that invalidates naive multi-step conformal
-prediction.
-\item The \emph{faithfulness frontier} (Section~\ref{sec:method}): a horizon-indexed family of
-dependent e-processes, a valid aggregation across horizons under arbitrary dependence, and a
-monotone trust-horizon estimator $\hstar(t)$ that doubles as a planning controller.
-\item \emph{Three theorems, proved in full} (Section~\ref{sec:theory}): uniform validity (a
+\item \textbf{A conditional e-process construction for world-model faithfulness on
+endogenous streams} (Sections~\ref{sec:setup}--\ref{sec:method}). We formalize
+$\eps$-faithfulness as a horizon-indexed, conditional-mean null under the deployment
+filtration and build per-horizon test martingales by betting, using mixture
+(growth-rate-optimal) bets. We identify and resolve the recursive-multi-step validity
+problem that invalidates naive multi-step conformal prediction.
+\item \textbf{The faithfulness frontier} (Section~\ref{sec:method}): a horizon-indexed family
+of dependent e-processes, a valid aggregation across horizons under arbitrary dependence, and
+a monotone trust-horizon estimator $\hstar(t)$ that doubles as a planning controller.
+\item \textbf{Three theorems, proved in full} (Section~\ref{sec:theory}): uniform validity (a
 faithful horizon is never revoked except with probability at most $\alpha$); an anytime-valid
 simulation lemma that lifts a running, empirically certified one-step error to a time-uniform
 bound on the $h$-step value gap---to our knowledge the first time-uniform version of the
 simulation lemma; and an order-optimal detection-delay bound under a drift alternative.
-\item A \emph{three-tier empirical study} (Section~\ref{sec:experiments}): a ground-truth
+\item \textbf{A three-tier empirical study} (Section~\ref{sec:experiments}): a ground-truth
 validation of all three theorems on a controllable latent simulator; real-data demonstrations
-on Moving MNIST and the KTH human-action dataset under speed, gait, and domain shifts; and
-ATLAS monitoring learned neural world models---a convolutional autoencoder and a JEPA-style
-frozen-encoder model---on a graphics processing unit. The trust horizon collapses when the
-shift opens; offline metrics do not react.
+on Moving MNIST, the KTH human-action dataset, and KITTI ego-view driving video under speed,
+gait, domain, and ego-motion shifts; and ATLAS monitoring learned neural world models---a
+convolutional autoencoder and a JEPA-style frozen-encoder model---on a GPU. The trust horizon
+collapses when the shift opens; offline metrics do not react.
 \end{enumerate}
 
 \subsection{Related work}\label{sec:related}
 
 ATLAS sits at the confluence of four research programs.
 
-\paragraph{Anytime-valid inference, e-values, and testing by betting.}
-The foundation is Ville's inequality \citep{ville1939}, which controls the probability that a
-nonnegative supermartingale ever crosses a high threshold, and the modern theory of
-game-theoretic probability, e-values, and e-processes \citep{shafer2019game,vovk2021evalues,
-ramdas2023savi}. Testing by betting \citep{shafer2021testing} reframes a test as a gambler
-wagering against the null; safe testing and growth-rate-optimal betting \citep{gruenwald2024safe}
-characterize wagers that maximize the rate of evidence accumulation; and betting confidence
-sequences for bounded means \citep{waudbysmith2024betting}, with time-uniform empirical-Bernstein
-bounds \citep{howard2021timeuniform}, give the tight, variance-adaptive intervals we use for the
+\emph{Anytime-valid inference, e-values, and testing by betting.} The foundation is Ville's
+inequality \citep{ville1939}, which controls the probability that a nonnegative supermartingale
+ever crosses a high threshold, and the modern theory of game-theoretic probability, e-values,
+and e-processes \citep{shafer2019game,vovk2021evalues,ramdas2023savi}. Testing by betting
+\citep{shafer2021testing} reframes a test as a gambler wagering against the null; safe testing
+and growth-rate-optimal betting \citep{gruenwald2024safe} characterize wagers that maximize the
+rate of evidence accumulation; and betting confidence sequences for bounded means
+\citep{waudbysmith2024betting}, with time-uniform empirical-Bernstein bounds
+\citep{howard2021timeuniform}, give the tight, variance-adaptive intervals we use for the
 one-step gap. ATLAS specializes this machinery to world-model faithfulness on
 action-conditioned, policy-endogenous streams, organized into a horizon-indexed frontier; this
 combination is new.
 
-\paragraph{Conformal prediction and its time-series variants.}
-Conformal prediction \citep{vovk2005algorithmic} provides distribution-free coverage under
-exchangeability; covariate-shift \citep{tibshirani2019covariate} and adaptive or online variants
+\emph{Conformal prediction and its time-series variants.} Conformal prediction
+\citep{vovk2005algorithmic} provides distribution-free coverage under exchangeability;
+covariate-shift \citep{tibshirani2019covariate} and adaptive or online variants
 \citep{gibbs2021adaptive,gibbs2024conformal} relax exchangeability to bounded or adversarial
-drift. These methods target marginal coverage rather than an anytime-valid per-horizon
-guarantee, degrade under recursive multi-step rollouts, and presume an exogenous
-data-generating mechanism. ATLAS's conditional construction abandons exchangeability altogether,
-which is what lets it handle multi-step, endogenous streams.
+drift, and a very recent line adapts conformal or windowed statistics online to streaming
+distribution shift---drift-aware spectral conformal prediction for non-exchangeable streams
+\citep{opoku2026drift} and online shift detection with conformal adaptation for deployed
+classifiers \citep{leong2026online}. These methods target marginal coverage rather than an
+anytime-valid per-horizon guarantee, degrade under recursive multi-step rollouts, and presume
+an exogenous data-generating mechanism; moreover, as online monitors they control the
+false-alarm rate only at a tuned horizon and inflate it under continued monitoring (the
+multiple-looks problem). ATLAS's conditional construction abandons exchangeability altogether
+and is anytime-valid by construction; Section~\ref{sec:exp-baselines} compares against
+representatives of these families and quantifies the difference.
 
-\paragraph{World models and their evaluation.}
-World models span latent-imagination agents \citep{ha2018worldmodels,hafner2023dreamerv3} and
-joint-embedding predictive architectures \citep{assran2023ijepa,bardes2024vjepa}, but their
-evaluation has remained offline: Fr\'echet Video Distance \citep{unterthiner2018fvd},
-reconstruction metrics, and return gaps all report a single static number. ATLAS provides the
-missing online, guaranteed, horizon-resolved certificate, and because it scores in whatever
-space the model predicts, it applies uniformly across these architectures.
+\emph{World models and their evaluation.} World models span latent-imagination agents
+\citep{ha2018worldmodels,hafner2023dreamerv3} and joint-embedding predictive architectures
+\citep{assran2023ijepa,bardes2024vjepa}; the 2025--2026 wave scales this to action-conditioned
+video predictors \citep{assran2025vjepa2}, interactive generative environments
+\citep{bruce2024genie}, and physical-AI foundation models \citep{nvidia2025cosmos}. Their
+evaluation, however, has remained offline: Fr\'echet Video Distance \citep{unterthiner2018fvd},
+reconstruction metrics, and return gaps all report a single static number. ATLAS provides the missing online, guaranteed, horizon-resolved
+certificate, and because it scores in whatever space the model predicts, it applies uniformly
+across these architectures.
 
-\paragraph{Model-based reinforcement learning and the simulation lemma.}
-The simulation lemma \citep{kearns2002near} bounds the difference in value between two Markov
-decision processes by their average one-step dynamics discrepancy, underlying model-based policy
-optimization \citep{janner2019mbpo} and recent tightness analyses \citep{lobel2024tightness}. All
-existing forms are fixed-sample and assume the one-step error is known. Our simulation lemma
+\emph{Model-based reinforcement learning and the simulation lemma.} The simulation lemma
+\citep{kearns2002near} bounds the difference in value between two Markov decision processes by
+their average one-step dynamics discrepancy, underlying model-based policy optimization
+\citep{janner2019mbpo} and recent tightness analyses \citep{lobel2024tightness}. All existing
+forms are fixed-sample and assume the one-step error is known. Our simulation lemma
 (Theorem~\ref{thm:simlemma}) is, to our knowledge, the first anytime-valid version, driven by a
 running confidence sequence and holding uniformly over deployment time.
 
-\paragraph{Sequential change detection.}
-Classical change detection and the Lorden/Lai minimax delay theory \citep{lorden1971,
-lai1998information} address detecting a shift with minimal delay under a false-alarm constraint;
-the recent e-detector framework \citep{shin2024edetectors} recasts these as sums of e-processes
-with nonparametric guarantees. We specialize e-detectors to a score-divergence faithfulness null
-and couple their delay to the collapse of the trust horizon. The nearest anytime-valid neighbors
-monitor agent \emph{behavior} or attribute \emph{evaluation} drift in language-model pipelines;
-ATLAS instead audits what a robot's world model \emph{believes}, complementary and, to our
-knowledge, unoccupied ground.
+\emph{Sequential change detection.} Classical change detection and the Lorden/Lai minimax delay
+theory \citep{lorden1971,lai1998information} address detecting a shift with minimal delay under
+a false-alarm constraint; the recent e-detector framework \citep{shin2024edetectors} recasts
+these as sums of e-processes with nonparametric guarantees. We specialize e-detectors to a
+score-divergence faithfulness null and couple their delay to the collapse of the trust horizon.
+
+The nearest anytime-valid neighbors monitor agent \emph{behavior} or attribute
+\emph{evaluation} drift in language-model pipelines; ATLAS instead audits what an agent's world
+model \emph{believes}, complementary and, to our knowledge, unoccupied ground.
 
 \section{Problem formulation}\label{sec:setup}
 
 \subsection{Deployment protocol and notation}
 
-A world model $M$ is deployed online alongside a policy or planner $\pi$. Deployment proceeds in
-rounds $t=1,2,\dots$. At round $t$ the robot occupies a (possibly latent) state $x_t\in\Xcal$ and
-emits an observation; the planner selects an action sequence $a_{t:t+H-1}=(a_t,\dots,a_{t+H-1})$
-up to a maximum horizon $H$, using $M$ for imagined rollouts. For each horizon $h\in\{1,\dots,H\}$
-the model produces an action-conditioned $h$-step predictive distribution
+A world model $M$ is deployed online alongside a policy or planner $\pi$. Deployment proceeds
+in rounds $t=1,2,\dots$. At round $t$ the agent occupies a (possibly latent) state
+$x_t\in\Xcal$ and emits an observation; the planner selects an action sequence
+$a_{t:t+H-1}=(a_t,\dots,a_{t+H-1})$ up to a maximum horizon $H$, using $M$ for imagined
+rollouts. For each horizon $h\in\{1,\dots,H\}$ the model produces an action-conditioned
+$h$-step predictive distribution
 \begin{equation}
 P^M_{t,h}(\cdot)\defeq P^M\!\big(\,\cdot \mid x_t,\, a_{t:t+h-1}\,\big)\in\Delta(\Ycal),
 \end{equation}
-over a target space $\Ycal$ (observations, states, or a learned latent code). The robot executes
+over a target space $\Ycal$ (observations, states, or a learned latent code). The agent executes
 a prefix of the plan; reality reveals the realized $h$-step outcome $Y^{(h)}_t\in\Ycal$, which
 resolves the round-$t$, horizon-$h$ prediction at time $t{+}h$. We index each per-horizon stream
 by resolution order and write $k$ for the $k$-th resolved horizon-$h$ prediction, issued at time
@@ -390,7 +413,7 @@ $W^{(h)}_K=\sum_{j}\nu_j\prod_{k}(1+\lambda^{(j)}(Z_k-\eps_h))$. Each summand is
 by Proposition~\ref{prop:evar}, and a convex combination of test supermartingales is a test
 supermartingale (Lemma~\ref{lem:mix-sm}); the mixture is parameter-free, does not deplete wealth under
 the null, and adapts to an unknown margin, realizing the growth-rate-optimal principle of
-\citet{gruenwald2024safe}.
+Gr\"unwald et al.\ \citep{gruenwald2024safe}.
 
 \begin{lemma}[Mixtures preserve validity]\label{lem:mix-sm}
 If $(W^{(j)}_k)_k$ are nonnegative test supermartingales and $\nu_j\ge0,\sum_j\nu_j=1$, then
@@ -442,9 +465,9 @@ bound, costing $+\log H$) or, when a single pooled certificate suffices, drive t
 averaged e-process $\bar W_k=\frac1H\sum_h W^{(h)}_k$, which by Lemma~\ref{lem:mix-sm} is valid under
 arbitrary dependence across horizons---essential, since the horizon streams share the same underlying
 trajectory. When the object is to detect a \emph{change} in faithfulness rather than to test a fixed
-horizon, we use a Shiryaev--Roberts e-detector \citep{shin2024edetectors}, $R_t=(1+R_{t-1})e_t$, which
-accumulates evidence over all candidate changepoints so that power is not depleted before the change.
-Algorithm~\ref{alg:atlas} summarizes the procedure.
+horizon, we use a Shiryaev--Roberts e-detector \citep{shin2024edetectors},
+$R_t=(1+R_{t-1})e_t$, which accumulates evidence over all candidate changepoints so that power is not
+depleted before the change. Algorithm~\ref{alg:atlas} summarizes the procedure.
 
 \begin{algorithm}[t]
 \caption{ATLAS: anytime-valid faithfulness certification}\label{alg:atlas}
@@ -479,7 +502,7 @@ $\rho$ (e.g.\ Pinsker: $\rho=\TV$, $\phi(u)=\sqrt{u/2}$).
 \end{assumption}
 \begin{assumption}[Rollout regularity]\label{as:rollout}
 Either (i) rewards lie in $[0,R_{\max}]$ and returns are $\gamma$-discounted, with a bounded
-concentrability coefficient $C_\infty$ relating the rollout-visited state--action distribution to the
+concentrability coefficient $C_\infty$ relating the rollout-visited state–action distribution to the
 deployment distribution on which the one-step gap is certified; or (ii) the true transition kernel is
 $L$-Lipschitz in $\rho$.
 \end{assumption}
@@ -536,7 +559,7 @@ under $H^{\ge}_u$; Ville's inequality gives $\PR(\sup_K\widetilde W_K(u)\ge1/\al
 value $u=m_K$ we would have $\widetilde W_K(u)\ge1/\alpha$ while $H^{\ge}_u$ holds, an event of
 probability at most $\alpha$; since $\widetilde W_K(u)$ is monotone in $u$, testing the boundary
 suffices. Hence $\PR(\exists K: m_K>\hat\delta_1(K))\le\alpha$. The empirical-Bernstein rate for the
-mixture choice is that of \citet[Thm.~2]{waudbysmith2024betting}.
+mixture choice is that of Waudby-Smith and Ramdas \citep[Thm.~2]{waudbysmith2024betting}.
 \end{proof}
 
 \begin{theorem}[Anytime-valid simulation lemma]\label{thm:simlemma}
@@ -565,7 +588,7 @@ $\law^M_{t,h}-\law^{\mathrm{real}}_{t,h}=\sum_{i=1}^{h}(\mathcal K^{\mathrm{real
 In case (ii), each true kernel is a $\rho$-contraction of modulus $L$, so by the triangle inequality
 $\rho(\law^M_{t,h},\law^{\mathrm{real}}_{t,h})\le\sum_{i=1}^h L^{i-1}\,\bar\rho_1$ with $\bar\rho_1\le
 \phi(\hat\delta_1(t))$; multiplying by $R_{\max}$ gives the case-(ii) bound. In case (i), the discounted
-value-difference telescoping is the simulation lemma of \citet{kearns2002near}, $|V^\pi_M-V^\pi_{\mathrm{real}}|
+value-difference telescoping is the simulation lemma of Kearns and Singh \citep{kearns2002near}, $|V^\pi_M-V^\pi_{\mathrm{real}}|
 \le\frac{\gamma}{(1-\gamma)^2}R_{\max}\,\E_{d^\pi}[\rho_{\TV}]$, with truncation to horizon $h$ replacing
 $1$ by $1-\gamma^h$; the one-step error is evaluated on the rollout-visited distribution $d^\pi$, at most
 $C_\infty$ times its certified value on the deployment distribution. Substituting $\bar\rho_1\le
@@ -627,7 +650,7 @@ simulator where the ground-truth dynamics---and hence the true faithfulness---ar
 (Section~\ref{sec:exp-synth}); this is the only setting in which the guarantees can be checked against
 truth, since for a real world model ``truth'' is unobserved. We then move to real image-sequence data
 under three distinct distribution shifts (Section~\ref{sec:exp-real}) and finally to learned neural world
-models trained on a graphics processing unit (Section~\ref{sec:exp-gpu}).
+models trained on a GPU (Section~\ref{sec:exp-gpu}).
 
 \subsection{Ground-truth validation of the three theorems}\label{sec:exp-synth}
 
@@ -638,16 +661,16 @@ predictive exactly calibrated under the null (so there is a genuine null to test
 stream non-independent and adapted. The score statistic is the calibration excess
 $Z=\mathrm{mahalanobis}^2/d-1$, processed on non-overlapping windows.
 
-\paragraph{Theorem~\ref{thm:validity} (no false revocation).} Under the null, across $400$ independent
+\emph{Theorem~\ref{thm:validity} (no false revocation).} Under the null, across $400$ independent
 deployments, the empirical revocation rate is at or below the level, uniformly over all rounds
-(Table~\ref{tab:validity}, Fig.~\ref{fig:validity}). Every horizon is well within its $\alpha/H=0.01$
+(Table~\ref{tab:validity}, Figure~\ref{fig:validity}). Every horizon is well within its $\alpha/H=0.01$
 budget and the any-horizon rate is far below $\alpha=0.05$; the e-process is conservative, exactly as
 Ville's inequality predicts.
 
 \begin{table}[t]\centering
 \caption{Theorem~\ref{thm:validity} in practice: empirical false-revocation rate under the null ($400$
 deployments, $\alpha=0.05$, per-horizon level $\alpha/H=0.01$). ATLAS never falsely revokes a faithful
-horizon; the rates sit far below the guarantees}
+horizon; the rates sit far below the guarantees.}
 \label{tab:validity}
 \begin{tabular}{lcccccc}
 \toprule
@@ -659,33 +682,32 @@ guarantee (bound) & $0.01$ & $0.01$ & $0.01$ & $0.01$ & $0.01$ & $0.05$ \\
 \end{tabular}
 \end{table}
 
-\paragraph{Theorem~\ref{thm:simlemma} (the frontier as a controller).} With a drift injected at round
-$900$, the certified one-step gap $\hat\delta_1(t)$ tightens toward the true gap while the model is
-faithful and rises as soon as the drift opens; the trust horizon $\hstar(t)=\max\{h:C(h,\gamma)
-\phi(\hat\delta_1(t))\le\text{budget}\}$ collapses from $38$ to $7$ within a few rounds, while an offline
-metric frozen at its pre-deployment value remains at $38$ (Fig.~\ref{fig:teaser}). This is exactly the
-controller behavior the theorem licenses.
+\emph{Theorem~\ref{thm:simlemma} (the frontier as a controller).} With a drift injected at round $900$,
+the certified one-step gap $\hat\delta_1(t)$ tightens toward the true gap while the model is faithful and
+rises as soon as the drift opens; the trust horizon $\hstar(t)=\max\{h:C(h,\gamma)\phi(\hat\delta_1(t))\le
+\text{budget}\}$ collapses from $38$ to $7$ within a few rounds, while an offline metric frozen at its
+pre-deployment value remains at $38$ (Figure~\ref{fig:teaser}). This is exactly the controller behavior the
+theorem licenses.
 
-\paragraph{Theorem~\ref{thm:delay} (detection delay).} Sweeping the drift margin and measuring the
-detection delay over $100$ seeds, the measured delay matches the theoretical law $(\log(1/\alpha)+\log
-m)/D^\star$ to within $\approx6\%$, with $\text{delay}\cdot D^\star\approx6$ nearly constant, confirming
-$\text{delay}\propto1/D^\star$ (Fig.~\ref{fig:validity}, right). In this range $D^\star\propto m$ because
+\emph{Theorem~\ref{thm:delay} (detection delay).} Sweeping the drift margin and measuring the detection
+delay over $100$ seeds, the measured delay matches the theoretical law $(\log(1/\alpha)+\log m)/D^\star$ to
+within $\approx6\%$, with $\text{delay}\cdot D^\star\approx6$ nearly constant, confirming
+$\text{delay}\propto1/D^\star$ (Figure~\ref{fig:validity}, right). In this range $D^\star\propto m$ because
 the bet saturates at $\lambda_{\max}$, so the delay scales as $1/m$; the $1/m^2$ small-margin regime requires
 $m\lesssim0.07$, consistent with Remark~\ref{rem:reading}.
 
 \begin{figure}[t]\centering
-\begin{subfigure}{0.49\linewidth}\centering
-\includegraphics[width=\linewidth]{figures/exp1_validity.png}
-\caption{Uniform validity}
+\begin{subfigure}{0.49\textwidth}\centering
+\includegraphics[width=\textwidth]{figures/exp1_validity.png}
+\caption{Uniform validity: per-horizon Type-I error under the null (left) and null wealth paths staying
+below the $\log(1/\alpha_h)$ threshold (right).}
 \end{subfigure}\hfill
-\begin{subfigure}{0.49\linewidth}\centering
-\includegraphics[width=\linewidth]{figures/exp3_delay.png}
-\caption{Detection delay}
+\begin{subfigure}{0.49\textwidth}\centering
+\includegraphics[width=\textwidth]{figures/exp3_delay.png}
+\caption{Detection delay matches $(\log\frac1\alpha+\log m)/D^\star$ (left) and is linear in $1/D^\star$
+(right).}
 \end{subfigure}
-\caption{Ground-truth validation of Theorems~\ref{thm:validity} and \ref{thm:delay}. \textbf{a}
-Per-horizon Type-I error under the null (left) and null wealth paths staying below the $\log(1/\alpha_h)$
-threshold (right). \textbf{b} Measured delay matches $(\log\frac1\alpha+\log m)/D^\star$ (left) and is
-linear in $1/D^\star$ (right)}
+\caption{Ground-truth validation of Theorems~\ref{thm:validity} and \ref{thm:delay}.}
 \label{fig:validity}
 \end{figure}
 
@@ -698,36 +720,36 @@ tolerance $\eps_h$ is calibrated on held-out in-distribution clips, on the same 
 then runs in-distribution before switching regime at a known round. We study three shifts spanning two
 datasets and two failure modes.
 
-\paragraph{Moving MNIST \citep{srivastava2015movingmnist}: a speed (dynamics) shift.} The stream runs at
-the native frame rate, then switches to double speed---a dynamics change the native-rate model cannot
-track. The wealth is flat during the native period (valid, no depletion) with $\hstar=8$; after the shift,
+\emph{Moving MNIST \citep{srivastava2015movingmnist}: a speed (dynamics) shift.} The stream runs at the
+native frame rate, then switches to double speed---a dynamics change the native-rate model cannot track.
+The wealth is flat during the native period (valid, no depletion) with $\hstar=8$; after the shift,
 horizons $1$--$3$ cross the threshold and $\hstar$ collapses to $0$, while the offline trust horizon stays
-at $8$ (Fig.~\ref{fig:real}a).
+at $8$ (Figure~\ref{fig:real}, left).
 
-\paragraph{KTH Actions \citep{schuldt2004kth}: a gait (dynamics) shift.} A world model fit on \emph{walking}
+\emph{KTH Actions \citep{schuldt2004kth}: a gait (dynamics) shift.} A world model fit on \emph{walking}
 video is deployed; the subject then switches to \emph{running} (faster leg dynamics). $\hstar=3$ holds
 throughout the walking period with no false revocation, then collapses to $0$ once running begins
-(Fig.~\ref{fig:real}b; sample frames in Fig.~\ref{fig:frames}).
+(Figure~\ref{fig:real}, middle; sample frames in Figure~\ref{fig:frames}).
 
-\paragraph{KTH Actions: a domain (appearance) shift.} The same action (walking), but the recording
-condition changes from outdoors to indoors. This subtler shift produces a partial collapse, $\hstar:3\to2$
-(only the longest horizon is revoked); the graded response---full collapse for strong dynamics shifts,
-partial for a subtle appearance shift---is itself informative (Fig.~\ref{fig:real}c).
+\emph{KTH Actions: a domain (appearance) shift.} The same action (walking), but the recording condition
+changes from outdoors to indoors. This subtler shift produces a partial collapse, $\hstar:3\to2$ (only the
+longest horizon is revoked); the graded response---full collapse for strong dynamics shifts, partial for a
+subtle appearance shift---is itself informative (Figure~\ref{fig:real}, right).
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.82\linewidth]{figures/kth_frames.png}
+\includegraphics[width=0.7\textwidth]{figures/kth_frames.png}
 \caption{Real human-action video from KTH: walking (top) and running (bottom). ATLAS monitors a
-walking-trained world model and detects the switch to running}
+walking-trained world model and detects the switch to running.}
 \label{fig:frames}
 \end{figure}
 
 \begin{figure}[t]\centering
-\begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{figures/mnist_frontier.png}\caption{Moving MNIST (speed)}\end{subfigure}\hfill
-\begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{figures/kth_frontier.png}\caption{KTH walking$\to$running}\end{subfigure}\hfill
-\begin{subfigure}{0.32\linewidth}\includegraphics[width=\linewidth]{figures/kth_domain_frontier.png}\caption{KTH outdoor$\to$indoor}\end{subfigure}
+\begin{subfigure}{0.32\textwidth}\includegraphics[width=\textwidth]{figures/mnist_frontier.png}\caption{Moving MNIST (speed).}\end{subfigure}\hfill
+\begin{subfigure}{0.32\textwidth}\includegraphics[width=\textwidth]{figures/kth_frontier.png}\caption{KTH walking$\to$running.}\end{subfigure}\hfill
+\begin{subfigure}{0.32\textwidth}\includegraphics[width=\textwidth]{figures/kth_domain_frontier.png}\caption{KTH outdoor$\to$indoor.}\end{subfigure}
 \caption{Real-data frontier collapse under three distinct shifts. In every case the per-horizon wealth is
 flat during the in-distribution period (valid), and $\hstar(t)$ collapses when the shift opens---fully for
-the two dynamics shifts, partially for the subtle domain shift}
+the two dynamics shifts, partially for the subtle domain shift.}
 \label{fig:real}
 \end{figure}
 
@@ -735,81 +757,158 @@ the two dynamics shifts, partially for the subtle domain shift}
 
 Finally we replace the linear world model with learned neural world models---which expose the same
 interface, namely a per-horizon predictive distribution scored against the realized outcome---to show that
-ATLAS's guarantees are indifferent to model class. These experiments were run on a graphics processing unit.
+ATLAS's guarantees are indifferent to model class. These experiments were run on a graphics processing
+unit.
 
-\paragraph{Convolutional-autoencoder world model on Moving MNIST}, a latent-imagination model in the
-Dreamer family. The wealth is flat during the native period; $\hstar$ collapses from $3$ to $0$ after the
-double-speed shift (Fig.~\ref{fig:gpu}a). ATLAS's guarantees hold behind a genuinely learned model.
+\emph{Convolutional-autoencoder world model on Moving MNIST}, a latent-imagination model in the Dreamer
+family. The wealth is flat during the native period; $\hstar$ collapses from $3$ to $0$ after the
+double-speed shift (Figure~\ref{fig:gpu}, left). ATLAS's guarantees hold behind a genuinely learned model.
 
-\paragraph{JEPA-style world model on KTH walking$\to$running.} A frozen pretrained image encoder with a
-learned latent-dynamics network generalizes across subjects, so the in-distribution walking score excess is
-low and stable while running is clearly separated. $\hstar=3$ holds through the entire walking period (a
-valid null) and collapses to $0$ once running begins (Fig.~\ref{fig:gpu}b). This experiment isolates a
-practical lesson: a representation that generalizes across the nuisance factors of the deployment (here,
-subject identity) is what makes the certificate clean on real video, and a stronger world model such as a
-recurrent state-space model can be substituted without any change to the certification procedure.
+\emph{JEPA-style world model on KTH walking$\to$running.} A frozen pretrained image encoder with a learned
+latent-dynamics network generalizes across subjects, so the in-distribution walking score excess is low and
+stable while running is clearly separated. $\hstar=3$ holds through the entire walking period (a valid null)
+and collapses to $0$ once running begins (Figure~\ref{fig:gpu}, right). This experiment isolates a practical
+lesson: a representation that generalizes across the nuisance factors of the deployment (here, subject
+identity) is what makes the certificate clean on real video, and a stronger world model such as a recurrent
+state-space model can be substituted without any change to the certification procedure.
+
+\emph{Convolutional-autoencoder world model on KITTI ego-view driving: an ego-motion (dynamics)
+shift.} Our final and most safety-relevant setting is a vehicle-mounted forward camera, where a
+world model predicts its own future observations as the vehicle drives---the archetypal autonomous
+driving world model, here the KITTI benchmark \citep{geiger2013kitti}. We train the
+convolutional-autoencoder model on nominal-speed driving and
+deploy it on \emph{faster ego-motion}: a threefold temporal subsampling of held-out road segments,
+so the vehicle covers three times the distance per step. Crucially the scenes are held fixed between
+the nominal and fast streams (Figure~\ref{fig:kitti-frames}), so the appearance is identical and
+only the dynamics change---an unambiguous world-model faithfulness breach, the driving analogue of
+the Moving MNIST speed shift, and one that isolates exactly what a dynamics model is responsible for.
+To preclude in-sample optimism, the model fitting, the predictive-covariance calibration, and the
+tolerance calibration each use a disjoint held-out split. The result is a clean illustration of the
+guarantee (Figure~\ref{fig:kitti-frontier}): the wealth fluctuates but never crosses the threshold
+throughout the entire nominal-speed deployment, so $\hstar=3$ holds with no false revocation
+(Theorem~\ref{thm:validity}); once the ego-motion triples, the wealth climbs decisively past the
+threshold and $\hstar$ collapses to $0$. A monitor that merely thresholded a rolling prediction error
+would have to choose in advance between alarming during the benign fluctuations of nominal driving
+and missing the real change; the anytime-valid construction needs no such choice.
 
 \begin{figure}[t]\centering
-\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/neural_mnist_gpu.png}\caption{Convolutional autoencoder, Moving MNIST}\end{subfigure}\hfill
-\begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{figures/neural_kth_jepa_gpu.png}\caption{JEPA-style model, KTH}\end{subfigure}
+\includegraphics[width=0.86\textwidth]{figures/kitti_frames.png}
+\caption{KITTI ego-view driving frames. Top: consecutive nominal-speed frames (small frame-to-frame
+motion). Bottom: the same scene at threefold ego-speed (frame-skip), covering three times the
+distance per step---the ego-vehicle sweeps past the parked cars far faster. The scene is identical;
+only the dynamics differ, isolating a pure world-model faithfulness breach.}
+\label{fig:kitti-frames}
+\end{figure}
+
+\begin{figure}[t]\centering
+\begin{subfigure}{0.49\textwidth}\includegraphics[width=\textwidth]{figures/neural_mnist_gpu.png}\caption{Convolutional-autoencoder model, Moving MNIST (speed).}\end{subfigure}\hfill
+\begin{subfigure}{0.49\textwidth}\includegraphics[width=\textwidth]{figures/neural_kth_jepa_gpu.png}\caption{JEPA-style model, KTH walking$\to$running.}\end{subfigure}
 \caption{ATLAS monitoring learned neural world models: a valid in-distribution null (flat wealth) followed
-by $\hstar(t)$ collapse at the shift, for both a convolutional autoencoder (Moving MNIST, speed shift) and
-a JEPA-style model (KTH, walking$\to$running)}
+by $\hstar(t)$ collapse at the shift, for both a convolutional autoencoder and a JEPA-style model.}
 \label{fig:gpu}
 \end{figure}
 
-Three findings recur across all tiers. First, validity is never violated: during every in-distribution
-period the wealth is flat and $\hstar$ holds, matching Theorem~\ref{thm:validity}. Second, the frontier
-collapses at the shift---sharply for dynamics shifts and partially for a subtle appearance shift---always
-before an offline metric would react; indeed the offline horizon never reacts at all. Third, the behavior
-is model-agnostic, holding for linear, convolutional-autoencoder, and JEPA-style world models, as the
-theory requires.
+\begin{figure}[t]\centering
+\includegraphics[width=0.86\textwidth]{figures/neural_kitti_gpu.png}
+\caption{ATLAS monitoring a convolutional-autoencoder driving world model on KITTI under an
+ego-motion shift. Top: per-horizon log-wealth; it fluctuates during nominal-speed driving but stays
+below the reject threshold (dashed), then climbs past it after the ego-speed triples (dotted line).
+Bottom: the trust horizon $\hstar(t)$ holds at $3$ through the entire nominal-speed period (no false
+revocation) and collapses to $0$ once the dynamics shift opens.}
+\label{fig:kitti-frontier}
+\end{figure}
+
+Three findings recur across all tiers and all four datasets. First, validity is never violated: during
+every in-distribution period, including the heavy-tailed nominal-speed driving stream, the wealth stays
+below the threshold and $\hstar$ holds, matching Theorem~\ref{thm:validity}. Second, the frontier
+collapses at the shift---sharply for dynamics shifts (speed, gait, ego-motion) and partially for a subtle
+appearance shift---always before an offline metric would react, indeed the offline horizon never reacts at
+all. Third, the behavior is model-agnostic, holding for linear, convolutional-autoencoder, and JEPA-style
+world models, as the theory requires.
+
+\subsection{Comparison with competitor monitors}\label{sec:exp-baselines}
+
+The distinctive property of ATLAS is anytime validity: its false-alarm probability is controlled at
+\emph{every} round by construction. To quantify what this buys, we compare, on the controllable simulator
+where ground truth is known, against three standard and recent online drift monitors that consume the same
+one-step score stream: an offline \emph{fixed threshold}; a \emph{sliding-window $z$-test} (the sliding-window
+online-shift-detection family, e.g.\ \citealp{leong2026online}); and \emph{CUSUM}. The baselines'
+thresholds are calibrated on null runs to hit a $5\%$ false-alarm rate at a nominal monitoring horizon
+$T_{\mathrm{cal}}$; we then report the false-alarm rate at $T_{\mathrm{cal}}$, the rate at $3\,T_{\mathrm{cal}}$
+(longer monitoring, hence more looks), and the mean detection delay after a drift (Table~\ref{tab:baselines},
+Figure~\ref{fig:baselines}).
+
+\begin{table}[t]\centering
+\caption{ATLAS versus competitor drift monitors on the ground-truth simulator ($\alpha=0.05$). ATLAS keeps
+the false-alarm rate below $\alpha$ at both the calibration horizon and a $3\times$ longer one; the tuned
+baselines inflate their false-alarm rate under longer monitoring (the multiple-looks problem) and achieve
+lower delay only by alarming aggressively---i.e.\ by sacrificing validity.}
+\label{tab:baselines}
+\begin{tabular}{lccc}
+\toprule
+monitor & FA @ $T_{\mathrm{cal}}$ & FA @ $3\,T_{\mathrm{cal}}$ & mean delay \\
+\midrule
+\textbf{ATLAS} (e-process) & $\mathbf{0.000}$ & $\mathbf{0.003}$ & $53.8$ \\
+Fixed threshold            & $0.073$ & $0.173$ & $12.5$ \\
+Sliding $z$-test           & $0.073$ & $0.173$ & $12.5$ \\
+CUSUM                      & $0.060$ & $0.173$ & $13.4$ \\
+\midrule
+target                     & $\le0.05$ & $\le0.05$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.9\textwidth]{figures/exp4_baselines.png}
+\caption{ATLAS versus competitor monitors. Left: false-alarm rate at the calibration horizon and at a
+$3\times$ longer horizon---only ATLAS stays below $\alpha$ (dashed) as monitoring continues; the tuned
+baselines inflate. Right: mean detection delay. The baselines' shorter delay is a direct consequence of the
+looser (invalid) alarm behavior seen on the left.}
+\label{fig:baselines}
+\end{figure}
+
+The comparison makes the trade-off explicit. All baselines can be tuned to any single-horizon false-alarm
+target, but as \emph{online} monitors they are subject to the multiple-looks problem: continued monitoring
+multiplies their opportunities to alarm, so their false-alarm rate grows with the monitoring horizon (here
+from $\sim\!0.06$ to $\sim\!0.17$). ATLAS's rate instead stays below $\alpha$ at every horizon---this is
+Theorem~\ref{thm:validity}, not a tuning choice. The baselines' shorter detection delay is not a free lunch:
+it is bought with exactly the aggressive alarming that inflates their false-alarm rate. A practitioner who
+needs a guarantee that survives open-ended deployment has, to our knowledge, no alternative to the
+anytime-valid construction.
 
 \section{Discussion and conclusions}\label{sec:conclusion}
 
-We have introduced ATLAS, which gives a deployed world model a running, anytime-valid certificate of
-faithfulness: a trust horizon $\hstar(t)$ that collapses precisely when reality drifts from imagination,
-backed by three guarantees we proved in full---a uniform no-false-revocation theorem, an anytime-valid
-simulation lemma linking certified one-step error to the $h$-step value gap, and an order-optimal
-detection-delay bound. The construction is representation- and model-agnostic, requires no exchangeability,
-and converts a passive monitor into a planning controller by clipping imagination depth to the certified
-horizon. Across a ground-truth simulator, real human-action and video-benchmark data, and learned neural
-world models, ATLAS behaves exactly as the theory predicts, while the offline metrics in universal use
-today stay blind.
+We have introduced ATLAS, which gives a deployed world model something it has never had: a running,
+anytime-valid certificate of faithfulness. The certificate is a trust horizon $\hstar(t)$ that collapses
+precisely when reality drifts from imagination, backed by three guarantees we proved in full---a uniform
+no-false-revocation theorem, an anytime-valid simulation lemma linking certified one-step error to the
+$h$-step value gap, and an order-optimal detection-delay bound. The construction is representation- and
+model-agnostic, requires no exchangeability, and converts a passive monitor into a planning controller by
+clipping imagination depth to the certified horizon. Across a ground-truth simulator, real human-action and
+video-benchmark data, and learned neural world models, ATLAS behaves exactly as the theory predicts, while
+the offline metrics in universal use today stay blind.
 
 Several limitations delineate the scope and point to future work. Our controlled study uses an exogenous
 behavior policy to obtain an exact null against which Type-I error can be measured; the fully
-policy-in-the-loop regime---a robot planning through the model under test---is the ultimate target, and
-while the conditional construction remains valid there for the same reason, quantifying power under
-closed-loop feedback is natural future work. The present experiments use controlled image-sequence testbeds
-rather than a physical platform; deploying ATLAS on a Dreamer- or JEPA-controlled robot in simulation
-benchmarks and on hardware is the immediate next step, for which the method is ready without modification.
-Non-overlapping windows make long horizons genuinely slower to certify because they receive fewer effective
-samples; the interleaved variant of Remark~\ref{rem:interleave} mitigates but does not eliminate this
-intrinsic price of honest multi-step testing. Certificate quality is bounded by world-model quality: a
-low-capacity or overfit model produces a non-stationary in-distribution null, which can mask or spuriously
-trigger revocation, and our JEPA experiment makes the remedy concrete---a representation that generalizes
-across nuisance factors restores a clean certificate. Finally, the tolerances $\eps_h$ are modeling choices
-that define what ``faithful'' means; we calibrate them to the in-distribution level so that ATLAS certifies
-departures from the model's own baseline, but a fixed absolute tolerance or a risk-derived budget is equally
-admissible and changes only the interpretation, not the validity. As world models move from benchmarks into
-deployed robot decision loops, we believe a running, valid faithfulness certificate will be not a luxury but
-a requirement, and ATLAS offers a principled foundation for it.
+policy-in-the-loop regime is the ultimate target, and while the conditional construction remains valid there
+for the same reason, quantifying power under closed-loop feedback is natural future work. Non-overlapping
+windows make long horizons genuinely slower to certify because they receive fewer effective samples; the
+interleaved variant of Remark~\ref{rem:interleave} mitigates but does not eliminate this intrinsic price of
+honest multi-step testing. Certificate quality is bounded by world-model quality: a low-capacity or overfit
+model produces a non-stationary in-distribution null, which can mask or spuriously trigger revocation, and
+our JEPA experiment makes the remedy concrete---a representation that generalizes across nuisance factors
+restores a clean certificate. Finally, the tolerances $\eps_h$ are modeling choices that define what
+``faithful'' means; we calibrate them to the in-distribution level so that ATLAS certifies departures from
+the model's own baseline, but a fixed absolute tolerance or a risk-derived budget is equally admissible and
+changes only the interpretation, not the validity. As world models move from benchmarks into deployed
+decision loops, we believe a running, valid faithfulness certificate will be not a luxury but a requirement,
+and ATLAS offers a principled foundation for it.
 
-\backmatter
+\section*{Data and code availability}
+The methods and all reported experiments are reproducible from an accompanying open implementation together
+with the publicly available Moving MNIST, KTH Actions, and KITTI datasets.
 
-\bmhead{Acknowledgements}
-Not applicable.
-
-\section*{Statements and Declarations}
-\textbf{Funding.} No funding was received for conducting this study.\\
-\textbf{Competing interests.} The author has no competing interests to declare that are relevant to the
-content of this article.\\
-\textbf{Data availability.} The datasets analysed during the current study are publicly available: Moving
-MNIST (University of Toronto) and the KTH Actions dataset (KTH Royal Institute of Technology). An open
-reference implementation reproducing all experiments is available from the author on reasonable request.\\
-\textbf{Author ORCID.} Quang-Vinh Dang, \url{https://orcid.org/0000-0002-3877-8024}.
-
+\bibliographystyle{elsarticle-harv}
 \bibliography{references}
 
 \end{document}

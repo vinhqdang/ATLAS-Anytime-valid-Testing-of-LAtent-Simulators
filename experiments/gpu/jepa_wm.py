@@ -106,6 +106,27 @@ class JEPALatentWM:
             self.Sigma_h[h] = np.cov(R.T) + 1e-4 * np.eye(self.d)
         return self
 
+    # ----------------------------------------------------- covariance recalibration
+    def recalibrate(self, sequences, horizons, shrink=0.2):
+        """Re-estimate the per-horizon predictive covariance on *held-out*
+        in-distribution residuals so the calibration excess is centred near zero
+        out-of-sample; shrinks toward a diagonal target for stability."""
+        for h in horizons:
+            res = []
+            for s in sequences:
+                z = self.encode(s)
+                if len(z) <= h:
+                    continue
+                res.append(z[h:] - self._rollout(np.asarray(z[:-h]), h))
+            if not res:
+                continue
+            R = np.concatenate(res, 0)
+            emp = np.cov(R.T)
+            diag = np.diag(np.diag(emp))
+            self.Sigma_h[h] = ((1 - shrink) * emp + shrink * diag
+                               + 1e-4 * np.eye(self.d))
+        return self
+
     # -------------------------------------------------------------- helpers
     def encode(self, seq):
         return (self._feats(seq) - self._fmean) @ self.components_.T
