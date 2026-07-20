@@ -60,3 +60,27 @@ This is the last planned experiment (README roadmap phase 4c).
 `figures/neural_<dataset>_full.png` — per-horizon wealth and the `h*(t)` collapse for
 the neural WM (analogous to the linear-WM figures in `figures/`, `--smoke` variants
 are git-ignored).
+
+## GPU run findings (Colab T4, official google-colab-cli)
+
+Both runs were executed on a real Colab **Tesla T4** via the official CLI
+(`colab new --gpu T4`, `colab exec`, `colab download`).
+
+- **Moving MNIST — clean (committed: `figures/neural_mnist_gpu.png`).** With the
+  neural WM trained on GPU, the wealth is flat during the native-rate period (valid,
+  no false revocation) and `h*(t)` collapses 3→0 after the 2× speed shift. This
+  confirms the ATLAS guarantees hold behind a genuinely *learned* world model.
+- **KTH walking→running — needs a stronger WM.** The small conv-autoencoder + MLP
+  dynamics overfits the training subjects, so its held-out *walking* excess is
+  high and highly variable **at the clip level** — hard walking clips are scored as
+  poorly as running. No tolerance then separates the two, and `h*(t)` false-revokes
+  during the in-distribution period. This is a **world-model quality** limitation,
+  not an ATLAS one:
+  - the low-capacity **linear** WM generalizes more uniformly across subjects and
+    gives a *clean* KTH result (`figures/kth_frontier.png`, `h*` 3→0);
+  - the fix is a stronger video WM (DreamerV3 RSSM / a proper JEPA), which drops in
+    behind the same interface — the motivation for continuing this phase.
+
+Takeaway: the GPU pipeline and ATLAS monitoring work end-to-end on real GPU; the
+neural-WM quality is now the bottleneck for hard real-video shifts, which is the
+expected and intended next step (roadmap 4c).
