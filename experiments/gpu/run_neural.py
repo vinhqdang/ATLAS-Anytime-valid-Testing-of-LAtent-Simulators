@@ -46,7 +46,7 @@ def _mnist(smoke):
 
 def _kth(smoke):
     from experiments.real_data.datasets import load_kth
-    mv = 30 if smoke else 60
+    mv = 30 if smoke else 100
     walking = load_kth("walking", size=32, max_videos=mv, seq_len=40)
     running = load_kth("running", size=32, max_videos=mv, seq_len=40)
     n = len(walking)
@@ -70,8 +70,8 @@ def main():
     train, val, dep_id, dep_od, lab_id, lab_od, shift = (
         _mnist(args.smoke) if args.dataset == "mnist" else _kth(args.smoke))
 
-    ld = 16 if args.smoke else 48
-    ep = 3 if args.smoke else 20
+    ld = 16 if args.smoke else 64
+    ep = 3 if args.smoke else 35
     print(f"=== ATLAS + neural WM on {args.dataset} "
           f"({'smoke' if args.smoke else 'full'}) ===")
     wm = NeuralLatentWM(latent_dim=ld, img_size=32, epochs_ae=ep,
@@ -80,10 +80,20 @@ def main():
 
     val_ex = wm.raw_excess(val, HORIZONS, B=8.0)
     od_ex = wm.raw_excess(dep_od, HORIZONS, B=8.0)
-    # real video (KTH) is non-stationary across subjects -> a wider tolerance;
-    # the near-stationary Moving MNIST WM tolerates a tight one.
-    eps_mult = 0.1 if args.dataset == "mnist" else 0.5
-    eps = {h: float(val_ex[h].mean() + eps_mult * val_ex[h].std()) for h in HORIZONS}
+    if args.dataset == "mnist":
+        # near-stationary WM: a tight window-level tolerance suffices
+        eps = {h: float(val_ex[h].mean() + 0.1 * val_ex[h].std()) for h in HORIZONS}
+    else:
+        # real video is non-stationary across subjects: the window std badly
+        # underestimates clip-to-clip variation, so calibrate eps on the spread of
+        # PER-CLIP mean excess (95th percentile) — no in-distribution clip should
+        # then trip the detector.
+        per_clip = {h: [] for h in HORIZONS}
+        for c in val:
+            ce = wm.raw_excess([c], HORIZONS, B=8.0)
+            for h in HORIZONS:
+                per_clip[h].append(ce[h].mean())
+        eps = {h: float(np.quantile(per_clip[h], 0.95)) for h in HORIZONS}
     for h in HORIZONS:
         print(f"  h={h}: {lab_id}(val) {val_ex[h].mean():+.2f} | "
               f"{lab_od} {od_ex[h].mean():+.2f}  eps={eps[h]:.2f}")
