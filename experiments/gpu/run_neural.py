@@ -41,7 +41,30 @@ def _mnist(smoke):
     train, val = list(d[:a]), list(d[a:b])
     dep_id = list(d[b:c])
     dep_od = [moving_mnist_speed_shift(s[None], 2)[0] for s in d[c:c + (c - b)]]
-    return train, val, dep_id, dep_od, "native", "2x-speed", "speed shift"
+    return train, val, dep_id, dep_od, "native", "2x-speed", "speed shift", 32
+
+
+def _kitti(smoke):
+    """KITTI ego-view driving: city drives (in-distribution) -> road drives (shift).
+
+    A genuine world-model setting -- the model predicts its own future observations
+    as the vehicle drives. The scene/dynamics change from city to road (highway) is a
+    real distribution shift for a city-trained world model.
+    """
+    from experiments.real_data.datasets import load_kitti
+    city_ids = ["0011"] if smoke else ["0011", "0005", "0001", "0009", "0013"]
+    road_ids = ["0027"] if smoke else ["0027", "0015", "0029", "0032"]
+    city, road = [], []
+    for d in city_ids:
+        city += load_kitti(d, size=64, seq_len=20)
+    for d in road_ids:
+        road += load_kitti(d, size=64, seq_len=20)
+    np.random.default_rng(0).shuffle(city)
+    n = len(city); rest = city[n // 2:]
+    train = city[:n // 2]
+    val = rest[:max(3, len(rest) // 2)]
+    dep_id = rest[max(3, len(rest) // 2):]
+    return train, val, dep_id, road, "city", "road", "city->road shift", 64
 
 
 def _kth(smoke):
@@ -59,20 +82,20 @@ def _kth(smoke):
     np.random.default_rng(0).shuffle(rest)
     val = rest[:max(3, len(rest) // 2)]
     dep_id = rest[max(3, len(rest) // 2):]
-    return train, val, dep_id, running, "walking", "running", "walking->running"
+    return train, val, dep_id, running, "walking", "running", "walking->running", 32
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", choices=["mnist", "kth"], default="mnist")
+    ap.add_argument("--dataset", choices=["mnist", "kth", "kitti"], default="mnist")
     ap.add_argument("--model", choices=["neural", "jepa"], default="neural",
                     help="neural = conv-AE + dynamics; jepa = frozen ResNet + dynamics")
     ap.add_argument("--smoke", action="store_true", help="tiny config for CPU test")
     args = ap.parse_args()
     os.makedirs(FIG, exist_ok=True)
 
-    train, val, dep_id, dep_od, lab_id, lab_od, shift = (
-        _mnist(args.smoke) if args.dataset == "mnist" else _kth(args.smoke))
+    loaders = {"mnist": _mnist, "kth": _kth, "kitti": _kitti}
+    train, val, dep_id, dep_od, lab_id, lab_od, shift, img_size = loaders[args.dataset](args.smoke)
 
     ld = 16 if args.smoke else 64
     ep = 3 if args.smoke else 35
@@ -82,7 +105,7 @@ def main():
         from experiments.gpu.jepa_wm import JEPALatentWM
         wm = JEPALatentWM(latent_dim=ld, epochs_dyn=ep).fit(train, horizons=HORIZONS)
     else:
-        wm = NeuralLatentWM(latent_dim=ld, img_size=32, epochs_ae=ep,
+        wm = NeuralLatentWM(latent_dim=ld, img_size=img_size, epochs_ae=ep,
                             epochs_dyn=ep).fit(train, horizons=HORIZONS)
     print("device:", wm.dev)
 

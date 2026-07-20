@@ -98,6 +98,39 @@ def load_kth(action, zip_path=None, size=32, max_videos=40, max_frames=60,
     return seqs
 
 
+def _gray_square(img, size):
+    """Grayscale, centre-crop to a square that is a multiple of ``size``, block-mean."""
+    g = img.mean(axis=2) if img.ndim == 3 else img
+    h, w = g.shape
+    s = (min(h, w) // size) * size
+    g = g[(h - s) // 2:(h - s) // 2 + s, (w - s) // 2:(w - s) // 2 + s]
+    g = g.reshape(size, s // size, size, s // size).mean(axis=(1, 3))
+    return g.astype(np.float32) / 255.0
+
+
+def load_kitti(drive, data_dir=None, size=64, seq_len=20, stride=None):
+    """Load a KITTI raw drive's left-camera frames as fixed-length grayscale
+    sequences ``(seq_len, size, size)``.
+
+    ``drive`` is the drive id string (e.g. ``"0011"``); frames are read from
+    ``data/kitti_<drive>/**/image_02/data/*.png`` in temporal order and chopped into
+    non-overlapping (default) sequences. KITTI ego-view driving video is a genuine
+    world-model setting: the model predicts its own future observations as the
+    vehicle moves.
+    """
+    import imageio.v3 as iio
+    data_dir = data_dir or DATA
+    root = os.path.join(data_dir, f"kitti_{drive}")
+    paths = sorted(glob.glob(os.path.join(root, "**", "image_02", "data", "*.png"),
+                             recursive=True))
+    frames = [_gray_square(iio.imread(p), size) for p in paths]
+    if not frames:
+        return []
+    frames = np.stack(frames)
+    stride = stride or seq_len
+    return [frames[s:s + seq_len] for s in range(0, len(frames) - seq_len + 1, stride)]
+
+
 def sample_frames_figure(seqs_a, seqs_b, out_path, label_a, label_b, k=6):
     """Save a manuscript figure: a row of frames from regime A over regime B."""
     import matplotlib
