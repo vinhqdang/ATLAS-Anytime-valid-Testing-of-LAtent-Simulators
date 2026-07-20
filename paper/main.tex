@@ -9,6 +9,7 @@
 \usepackage{algpseudocode}
 \usepackage{enumitem}
 \usepackage{subcaption}
+\usepackage{microtype}
 \usepackage{hyperref}
 
 \theoremstyle{plain}
@@ -288,8 +289,10 @@ by resolution order and write $k$ for the $k$-th resolved horizon-$h$ prediction
 $s_k$ and resolved at $s_k{+}h$. We work on a filtered probability space with the deployment
 filtration
 \begin{equation}
-\Fcal_k \defeq \sigma\big(\text{all states, actions, planner internals, and outcomes observable
-up to the resolution of the }k\text{-th horizon-}h\text{ prediction}\big),
+\begin{aligned}
+\Fcal_k \defeq \sigma\big(&\text{all states, actions, planner internals, and outcomes}\\[-0.2ex]
+&\ \text{observable up to the resolution of the $k$-th horizon-$h$ prediction}\big),
+\end{aligned}
 \end{equation}
 and make no assumption that the data are independent or exchangeable. A random variable is
 \emph{predictable} if it is $\Fcal_{k-1}$-measurable.
@@ -300,10 +303,10 @@ Fix a negatively oriented, strictly proper scoring rule $S:\Delta(\Ycal)\times\Y
 \citep{gneiting2007strictly}: smaller is better, and $\E_{Y\sim Q}[S(Q,Y)]\le\E_{Y\sim Q}[S(P,Y)]$
 for all $P,Q$, with equality iff $P=Q$. The associated score divergence is
 \begin{equation}
-\dS(Q,P)\defeq \E_{Y\sim Q}[S(P,Y)]-\E_{Y\sim Q}[S(Q,Y)]\ \ge\ 0,\qquad \dS(Q,P)=0\iff P=Q.
+\dS(Q,P)\defeq \E_{Y\sim Q}[S(P,Y)]-\E_{Y\sim Q}[S(Q,Y)]\ \ge\ 0,
 \end{equation}
-Boundedness is used only for the empirical-Bernstein rates and can be relaxed to a conditional
-sub-$\psi$ tail condition. Three instances recur.
+with $\dS(Q,P)=0$ if and only if $P=Q$. Boundedness is used only for the empirical-Bernstein rates
+and can be relaxed to a conditional sub-$\psi$ tail condition. Three instances recur.
 
 \begin{example}[Logarithmic score / KL]
 For $S(P,y)=-\log p(y)$, $\dS(Q,P)=\mathrm{KL}(Q\,\|\,P)$; by Pinsker's inequality
@@ -567,12 +570,13 @@ Under Assumptions~\ref{as:bounded}--\ref{as:rollout}, with probability at least 
 simultaneously for all rounds $t$ and all horizons $h\le H$, the gap between the imagined $h$-step
 return under $M$ and the true $h$-step return under real dynamics for the deployed policy $\pi$ obeys
 \begin{equation}\label{eq:simlemma}
-\big|\,V^\pi_{M,h}(t)-V^\pi_{\mathrm{real},h}(t)\,\big|\ \le\ C(h)\cdot\phi\!\big(\hat\delta_1(t)\big),
-\qquad
-C(h)=\begin{cases}
+\begin{aligned}
+\big|\,V^\pi_{M,h}(t)-V^\pi_{\mathrm{real},h}(t)\,\big|\ &\le\ C(h)\cdot\phi\!\big(\hat\delta_1(t)\big),\\[0.6ex]
+\text{where}\quad C(h)&=\begin{cases}
 \dfrac{\gamma(1-\gamma^h)}{(1-\gamma)^2}\,C_\infty R_{\max}, & \text{case (i)},\\[2ex]
 R_{\max}\sum_{i=1}^{h}L^{\,i-1}, & \text{case (ii)},
 \end{cases}
+\end{aligned}
 \end{equation}
 where $\hat\delta_1(t)$ is the certified one-step gap of Lemma~\ref{lem:cs}.
 \end{theorem}
@@ -649,8 +653,10 @@ Our study is an ascending ladder of realism. We first validate each theorem in a
 simulator where the ground-truth dynamics---and hence the true faithfulness---are known exactly
 (Section~\ref{sec:exp-synth}); this is the only setting in which the guarantees can be checked against
 truth, since for a real world model ``truth'' is unobserved. We then move to real image-sequence data
-under three distinct distribution shifts (Section~\ref{sec:exp-real}) and finally to learned neural world
-models trained on a GPU (Section~\ref{sec:exp-gpu}).
+(Section~\ref{sec:exp-real}) and to learned neural world models trained on a GPU
+(Section~\ref{sec:exp-gpu}). Across these tiers we study \emph{three real-world datasets}---Moving MNIST,
+the KTH human-action videos, and KITTI egocentric autonomous-driving video---spanning speed, gait, domain,
+and ego-motion shifts.
 
 \subsection{Ground-truth validation of the three theorems}\label{sec:exp-synth}
 
@@ -717,8 +723,9 @@ We monitor a learned latent world model---principal-component features with a st
 dynamics model, a deliberately lightweight but genuine latent simulator---on real image sequences. The
 tolerance $\eps_h$ is calibrated on held-out in-distribution clips, on the same statistic the test consumes
 (real-video score excess is heavy-tailed, so a naive window-level calibration is mis-scaled); deployment
-then runs in-distribution before switching regime at a known round. We study three shifts spanning two
-datasets and two failure modes.
+then runs in-distribution before switching regime at a known round. This subsection studies three shifts
+on Moving MNIST and KTH; the learned neural world models of Section~\ref{sec:exp-gpu} then add a third
+real dataset, KITTI autonomous-driving video, under an ego-motion shift.
 
 \emph{Moving MNIST \citep{srivastava2015movingmnist}: a speed (dynamics) shift.} The stream runs at the
 native frame rate, then switches to double speed---a dynamics change the native-rate model cannot track.
@@ -753,7 +760,7 @@ the two dynamics shifts, partially for the subtle domain shift.}
 \label{fig:real}
 \end{figure}
 
-\subsection{Learned neural world models}\label{sec:exp-gpu}
+\subsection{Learned neural world models, including autonomous driving}\label{sec:exp-gpu}
 
 Finally we replace the linear world model with learned neural world models---which expose the same
 interface, namely a per-horizon predictive distribution scored against the realized outcome---to show that
