@@ -5,5 +5,5 @@
 *.blg
 *.fls
 *.fdb_latexmk
+*.spl
 *.synctex.gz
-*.toc

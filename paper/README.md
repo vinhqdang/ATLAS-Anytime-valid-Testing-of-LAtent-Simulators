@@ -1,24 +1,21 @@
-# ATLAS — manuscript
+# ATLAS — manuscript (Springer Nature, Autonomous Robots)
 
-Review-ready draft of the ATLAS paper.
+Prepared with the official Springer Nature LaTeX class (`sn-jnl.cls`, v3.1 Dec 2024),
+author-year "Basic" reference style (`sn-basic.bst`) — the style used by
+*Autonomous Robots*.
 
-- `main.tex` — the manuscript (article class, 10 pages).
-- `references.bib` — verified bibliography (mirror of `docs/references.bib`).
-- `figures/` — figures used by the paper (copies of `results/` and `figures/`).
-- `main.pdf` — compiled PDF (committed for convenient review).
+- `main.tex`   — manuscript source (single-column `sn-basic`; switch to `iicol` for
+  the two-column production layout via the document-class option).
+- `references.bib` — bibliography.
+- `sn-jnl.cls`, `sn-basic.bst` — Springer Nature class and bibliography style.
+- `figures/`   — figures.
+- `main.pdf`   — compiled PDF.
 
 ## Build
-
 ```bash
-latexmk -pdf main.tex        # or: pdflatex; bibtex main; pdflatex; pdflatex
+pdflatex main
+bibtex   main
+pdflatex main
+pdflatex main
 ```
-
-Requires a TeX distribution with `amsmath`, `graphicx`, `booktabs`, `natbib`,
-`hyperref`, `subcaption` (e.g. TeX Live, or upload to Overleaf).
-
-## Structure
-
-Introduction · Related work · Problem setup · Method (e-process construction +
-frontier) · Theory (three theorems) · Experiments (ground-truth validation,
-real-world data, learned neural world models on GPU) · Discussion & limitations ·
-Conclusion · Reproduction appendix.
+or `latexmk -pdf main.tex`.
