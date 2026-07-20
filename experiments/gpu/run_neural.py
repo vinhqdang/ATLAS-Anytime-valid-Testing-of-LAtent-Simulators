@@ -50,9 +50,14 @@ def _kth(smoke):
     walking = load_kth("walking", size=32, max_videos=mv, seq_len=40)
     running = load_kth("running", size=32, max_videos=mv, seq_len=40)
     n = len(walking)
-    return (walking[:n // 2], walking[n // 2:n // 2 + max(3, n // 4)],
-            walking[n // 2 + max(3, n // 4):], running,
-            "walking", "running", "walking->running")
+    train = walking[:n // 2]
+    rest = walking[n // 2:]
+    # shuffle in-distribution deploy/val clips so cross-subject appearance
+    # differences don't form a spurious trend (KTH is not perfectly stationary)
+    np.random.default_rng(0).shuffle(rest)
+    val = rest[:max(3, len(rest) // 2)]
+    dep_id = rest[max(3, len(rest) // 2):]
+    return train, val, dep_id, running, "walking", "running", "walking->running"
 
 
 def main():
@@ -75,7 +80,10 @@ def main():
 
     val_ex = wm.raw_excess(val, HORIZONS, B=8.0)
     od_ex = wm.raw_excess(dep_od, HORIZONS, B=8.0)
-    eps = {h: float(val_ex[h].mean() + 0.1 * val_ex[h].std()) for h in HORIZONS}
+    # real video (KTH) is non-stationary across subjects -> a wider tolerance;
+    # the near-stationary Moving MNIST WM tolerates a tight one.
+    eps_mult = 0.1 if args.dataset == "mnist" else 0.5
+    eps = {h: float(val_ex[h].mean() + eps_mult * val_ex[h].std()) for h in HORIZONS}
     for h in HORIZONS:
         print(f"  h={h}: {lab_id}(val) {val_ex[h].mean():+.2f} | "
               f"{lab_od} {od_ex[h].mean():+.2f}  eps={eps[h]:.2f}")
