@@ -203,8 +203,8 @@ bound on the $h$-step value gap---to our knowledge the first time-uniform versio
 simulation lemma; and an order-optimal detection-delay bound under a drift alternative.
 \item \textbf{A three-tier empirical study} (Section~\ref{sec:experiments}): a ground-truth
 validation of all three theorems on a controllable latent simulator; real-data demonstrations
-on Moving MNIST, the KTH human-action dataset, KITTI ego-view driving video, and aerial UAV
-navigation under speed, gait, domain, and ego-motion shifts; and ATLAS monitoring learned neural
+on Moving MNIST, the KTH human-action dataset, KITTI ego-view driving video, and real FPV drone flight
+video under speed, gait, domain, and ego-motion shifts; and ATLAS monitoring learned neural
 world models---a convolutional autoencoder and a JEPA-style frozen-encoder model---on a GPU. The trust
 horizon collapses when the shift opens; offline metrics do not react.
 \end{enumerate}
@@ -655,7 +655,7 @@ simulator where the ground-truth dynamics---and hence the true faithfulness---ar
 truth, since for a real world model ``truth'' is unobserved. We then move to real image-sequence data
 (Section~\ref{sec:exp-real}) and to learned neural world models trained on a GPU
 (Section~\ref{sec:exp-gpu}). Across these tiers we study \emph{four image-sequence datasets}---Moving MNIST,
-the KTH human-action videos, KITTI egocentric autonomous-driving video, and aerial UAV navigation---spanning
+the KTH human-action videos, KITTI egocentric autonomous-driving video, and real FPV drone flight video---spanning
 speed, gait, domain, and ego-motion shifts, on both a ground vehicle and an aerial vehicle.
 
 \subsection{Ground-truth validation of the three theorems}\label{sec:exp-synth}
@@ -725,7 +725,7 @@ tolerance $\eps_h$ is calibrated on held-out in-distribution clips, on the same 
 (real-video score excess is heavy-tailed, so a naive window-level calibration is mis-scaled); deployment
 then runs in-distribution before switching regime at a known round. This subsection studies three shifts
 on Moving MNIST and KTH; the learned neural world models of Section~\ref{sec:exp-gpu} then add two more
-egocentric datasets---KITTI autonomous-driving video and aerial UAV navigation---both under ego-motion shifts.
+egocentric datasets---KITTI autonomous-driving video and real FPV drone flight video---both under ego-motion shifts.
 
 \emph{Moving MNIST \citep{srivastava2015movingmnist}: a speed (dynamics) shift.} The stream runs at the
 native frame rate, then switches to double speed---a dynamics change the native-rate model cannot track.
@@ -835,29 +835,32 @@ world models, as the theory requires.
 
 \emph{Convolutional-autoencoder world model on aerial drone navigation: a second ego-motion shift.} Nothing
 in the construction is specific to driving. To show this, we repeat the ego-motion experiment on a second
-egocentric domain: a forward-facing camera on an unmanned aerial vehicle navigating an urban environment,
-from the Multi-View UAV dataset \citep{fang2025uav} collected in the CARLA simulator \citep{dosovitskiy2017carla}.
-The protocol mirrors the driving experiment exactly---train on nominal-speed flight, deploy on threefold
-ego-speed with the scenes held fixed (Figure~\ref{fig:drone-frames}), disjoint splits throughout---so only
-the flight dynamics change. The outcome mirrors it too (Figure~\ref{fig:drone-frontier}): the trust horizon
-holds at $\hstar=3$ through the entire nominal-speed flight with no false revocation, then collapses to $0$
-once the ego-speed triples. That the identical procedure, unchanged, certifies both a ground vehicle and an
-aerial vehicle is the model- and domain-agnosticism of ATLAS made concrete.
+egocentric domain using real footage: the forward-facing camera of a first-person-view racing quadrotor
+flown by an expert pilot through an outdoor scene, from the UZH-FPV drone-racing dataset
+\citep{delmerico2019uzhfpv}. The protocol mirrors the driving experiment exactly---train on nominal-speed
+flight, deploy on threefold ego-speed with the scenes held fixed (Figure~\ref{fig:drone-frames}), disjoint
+splits throughout---so only the flight dynamics change. The outcome mirrors it too
+(Figure~\ref{fig:drone-frontier}): the trust horizon holds at $\hstar=3$ through the entire nominal-speed
+flight with no false revocation, then collapses to $0$ once the ego-speed triples, with all three horizons
+revoked. That the identical procedure, unchanged, certifies both a ground vehicle and an aerial vehicle---on
+real driving and real flight video---is the model- and domain-agnosticism of ATLAS made concrete.
 
 \begin{figure}[t]\centering
 \includegraphics[width=\textwidth]{figures/drone_frames.png}
-\caption{Egocentric aerial UAV forward view (Multi-View UAV \citep{fang2025uav}, CARLA). Top: consecutive
-nominal-speed frames; bottom: the same scene at threefold ego-speed. As in the driving experiment the scene
-is held fixed and only the dynamics change, isolating a pure world-model faithfulness breach.}
+\caption{Real egocentric drone forward view (UZH-FPV \citep{delmerico2019uzhfpv}): a first-person-view
+racing quadrotor over an outdoor scene. Top: consecutive nominal-speed frames; bottom: the same scene at
+threefold ego-speed. As in the driving experiment the scene is held fixed and only the dynamics change,
+isolating a pure world-model faithfulness breach.}
 \label{fig:drone-frames}
 \end{figure}
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.86\textwidth]{figures/neural_drone_gpu.png}
-\caption{ATLAS monitoring a convolutional-autoencoder aerial-drone world model under an ego-motion shift.
-Top: per-horizon log-wealth stays below the reject threshold (dashed) throughout nominal-speed flight, then
-climbs past it after the ego-speed triples (dotted line). Bottom: the trust horizon $\hstar(t)$ holds at $3$
-through the entire nominal period (no false revocation) and collapses to $0$ once the dynamics shift opens.}
+\caption{ATLAS monitoring a convolutional-autoencoder world model on real FPV drone video under an
+ego-motion shift. Top: per-horizon log-wealth stays below the reject threshold (dashed) throughout
+nominal-speed flight, then climbs past it after the ego-speed triples (dotted line). Bottom: the trust
+horizon $\hstar(t)$ holds at $3$ through the entire nominal period (no false revocation) and collapses to
+$0$ once the dynamics shift opens.}
 \label{fig:drone-frontier}
 \end{figure}
 
@@ -953,7 +956,7 @@ not-for-profit sectors.
 
 \section*{Data and code availability}
 The methods and all reported experiments are reproducible from an accompanying open implementation together
-with the publicly available Moving MNIST, KTH Actions, KITTI, and Multi-View UAV (CARLA) datasets. No new
+with the publicly available Moving MNIST, KTH Actions, KITTI, and UZH-FPV drone-racing datasets. No new
 data were generated. The experiments use no human subjects or personal data beyond these established public
 benchmarks.
 
