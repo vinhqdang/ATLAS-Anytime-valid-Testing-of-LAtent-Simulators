@@ -47,10 +47,10 @@ def _mnist(smoke):
 def _kth(smoke):
     from experiments.real_data.datasets import load_kth
     mv = 30 if smoke else 100
-    # restrict to one recording scenario (outdoors, d1) so appearance is homogeneous
-    # and the shift is purely the gait dynamics (walking vs running)
+    # homogeneous in-distribution walking (one scenario) -> a tight null; running
+    # (the shift) uses all scenarios for ample detection data
     walking = load_kth("walking", size=32, max_videos=mv, seq_len=40, scenario=1)
-    running = load_kth("running", size=32, max_videos=mv, seq_len=40, scenario=1)
+    running = load_kth("running", size=32, max_videos=mv, seq_len=40)
     n = len(walking)
     train = walking[:n // 2]
     rest = walking[n // 2:]
@@ -94,14 +94,14 @@ def main():
     else:
         # real video is non-stationary across subjects: the window std badly
         # underestimates clip-to-clip variation, so calibrate eps on the spread of
-        # PER-CLIP mean excess (95th percentile) — no in-distribution clip should
+        # PER-CLIP mean excess (90th percentile) — few in-distribution clips should
         # then trip the detector.
         per_clip = {h: [] for h in HORIZONS}
         for c in val:
             ce = wm.raw_excess([c], HORIZONS, B=8.0)
             for h in HORIZONS:
                 per_clip[h].append(ce[h].mean())
-        eps = {h: float(np.quantile(per_clip[h], 0.95)) for h in HORIZONS}
+        eps = {h: float(np.quantile(per_clip[h], 0.90)) for h in HORIZONS}
     for h in HORIZONS:
         print(f"  h={h}: {lab_id}(val) {val_ex[h].mean():+.2f} | "
               f"{lab_od} {od_ex[h].mean():+.2f}  eps={eps[h]:.2f}")
@@ -128,11 +128,11 @@ def main():
     ax0.axhline(thr, color="crimson", ls="--", lw=1, label=r"reject $\log(1/\alpha_h)$")
     ax0.axvline(cp, color="k", ls=":", lw=1.2, label=shift)
     ax0.set_ylabel("log-wealth"); ax0.legend(frameon=False, ncol=3, fontsize=8)
-    ax0.set_title(f"ATLAS + neural latent WM — {args.dataset} ({shift})")
-    ax1.plot(hstar, color="#7a3b9d", lw=2.0, label=r"$h^*(t)$ ATLAS (neural WM)")
+    ax0.set_title(f"ATLAS + {args.model} latent WM — {args.dataset} ({shift})")
+    ax1.plot(hstar, color="#7a3b9d", lw=2.0, label=rf"$h^*(t)$ ATLAS ({args.model} WM)")
     ax1.axvline(cp, color="k", ls=":", lw=1.2)
     ax1.set_xlabel("deployment update"); ax1.set_ylabel(r"$h^*(t)$")
-    ax1.legend(frameon=False); ax1.set_title(r"$h^*(t)$ collapse — learned neural WM")
+    ax1.legend(frameon=False); ax1.set_title(rf"$h^*(t)$ collapse — learned {args.model} WM")
     fig.tight_layout()
     tag = "smoke" if args.smoke else "full"
     mtag = "" if args.model == "neural" else f"_{args.model}"
