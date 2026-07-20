@@ -2,3 +2,6 @@ numpy>=1.24
 scipy>=1.10
 matplotlib>=3.6
 pytest>=7.0
+# real-data experiments (experiments/real_data)
+scikit-learn>=1.2
+imageio[ffmpeg]>=2.30

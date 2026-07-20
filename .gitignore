@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ATLAS real-world data (not committed; download via experiments/real_data/download.py)
+data/
+*.zip
+*.avi

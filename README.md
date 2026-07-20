@@ -48,32 +48,54 @@ sketches.
 ## Repository layout
 
 ```
-docs/
-  01_problem_setup.md   Deployment protocol, faithfulness, scores, the endogeneity problem
-  02_construction.md    E-process betting construction + the faithfulness frontier h*(t)
-  03_theorems.md        The three theorems (uniform validity, sim-lemma, detection delay)
-  04_related_work.md    Novelty ledger + lit-sweep protocol (citations UNVERIFIED)
-  notation.md           Symbol table
+docs/                   Theory: problem setup, e-process construction, the 3 theorems
+atlas/                  Reference implementation
+  scores.py             Proper scoring rules (energy, CRPS, Gaussian NLL, Mahalanobis)
+  eprocess.py           Mixture-betting e-process, betting confidence sequence, e-detector
+  frontier.py           Horizon-indexed e-processes, faithfulness frontier h*(t)
+  simulator.py          Controllable linear-Gaussian latent world model (drift injection)
+experiments/
+  exp1_validity.py      Theorem 1 — uniform validity (no false revocation)
+  exp2_frontier.py      Frontier collapse + anytime-valid simulation lemma (Theorem 2)
+  exp3_delay.py         Theorem 3 — detection delay ~ (log 1/alpha + log m)/D*
+  real_data/            ATLAS on real image-sequence datasets (Moving MNIST, KTH)
+tests/                  Ville false-alarm control, CS coverage, power, proper scores
+results/                Synthetic-study figures + summary
+figures/                Real-data figures (sample frames + frontier collapse)
 ```
-*(An `atlas/` reference implementation and `experiments/` follow — see roadmap.)*
 
-## Planned experiments
+## Results
+
+- **Synthetic ground-truth study** (`results/`): all three theorems validated —
+  false-revocation 0.0025 ≤ α; `h*(t)` collapses 38→7 at a drift while an offline
+  metric stays blind; detection delay matches `(log 1/α + log m)/D*` to ~6%. Run:
+  `python -m experiments.run_all`.
+- **Real-world data** (`figures/`): ATLAS monitors a learned latent world model on
+  **Moving MNIST** (native → 2× speed) and **KTH Actions** (walking → running);
+  `h*(t)` collapses right when the real shift opens. Run:
+  `python -m experiments.real_data.download && python -m experiments.real_data.exp_mnist`.
+
+## Planned experiments (GPU phase)
 
 - **DreamerV3** on DMC / Atari with an injected mid-deployment dynamics shift
   (mass/friction perturbation): show $h^\*(t)$ collapsing exactly when the gap opens
   while FVD / offline metrics stay blind.
-- A **JEPA-style latent model**, scored purely in latent space (no decoding).
+- A **JEPA-style latent model**, scored purely in latent space (no decoding). The
+  PCA+linear latent WM in `experiments/real_data/latent_wm.py` is the CPU stand-in;
+  a Dreamer/JEPA model drops in behind the identical interface.
 - An **LLM-agent "textual world model"** setting (connects to the SENTRY line of work).
 
 ## Roadmap / status
 
 | Phase | Deliverable | Status |
 |-------|-------------|--------|
-| 0 | Formal problem setup + three theorem statements | **done** (this commit) |
+| 0 | Formal problem setup + three theorem statements | **done** |
+| 3 | `atlas/` reference implementation (e-process, frontier, scores) | **done** |
+| 4a | Synthetic ground-truth validation of Theorems 1–3 | **done** |
+| 4b | Real-data experiments (Moving MNIST, KTH Actions) | **done** |
 | 1 | Verified literature sweep → `references.bib`, rewrite `04_related_work.md` | next |
 | 2 | Full proofs | pending |
-| 3 | `atlas/` reference implementation (e-process, frontier, scores) | pending |
-| 4 | DreamerV3 / JEPA / LLM-WM experiments | pending |
+| 4c | DreamerV3 / JEPA / LLM-WM experiments (GPU) | pending |
 | 5 | Paper draft (target: ICLR 2027 World-Model Workshop → main track / AISTATS 2027 / TMLR) | pending |
 
 ## Positioning

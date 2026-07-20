@@ -82,7 +82,9 @@ class EProcess:
         self.lam_max = lam_scale / (z_hi - z_lo)
         self.mixture = mixture
         self.k = 0
-        self.history = []     # log-wealth trace
+        self.history = []       # log-wealth trace
+        self._max_logw = 0.0    # running max: revocation latches (Ville is about
+        self._latched = False   # *ever* crossing, so a rejection is permanent)
         if mixture:
             self.lams = np.linspace(self.lam_max / n_grid, self.lam_max, n_grid)
             self.comp_logw = np.zeros(n_grid)   # per-component log capital
@@ -104,8 +106,13 @@ class EProcess:
             self._sum_d += d
             self._sum_d2 += d * d
         self.k += 1
-        self.history.append(self.log_wealth)
-        return self.log_wealth
+        lw = self.log_wealth
+        if lw > self._max_logw:
+            self._max_logw = lw
+        if self._max_logw >= np.log(1.0 / self.alpha):
+            self._latched = True
+        self.history.append(lw)
+        return lw
 
     @property
     def log_wealth(self):
@@ -119,8 +126,12 @@ class EProcess:
 
     @property
     def rejected(self):
-        """True once the horizon is revoked: wealth >= 1/alpha (Ville)."""
-        return self.log_wealth >= np.log(1.0 / self.alpha)
+        """True once the horizon has *ever* been revoked (wealth >= 1/alpha).
+
+        Latches: Ville's guarantee concerns the event that the wealth ever crosses
+        the threshold, so a revocation is a permanent stopping decision — it does not
+        un-revoke if the wealth later falls back."""
+        return self._latched
 
 
 class BettingCS:
