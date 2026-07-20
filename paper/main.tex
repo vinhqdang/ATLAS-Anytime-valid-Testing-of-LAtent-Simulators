@@ -825,13 +825,28 @@ revocation) and collapses to $0$ once the dynamics shift opens.}
 \label{fig:kitti-frontier}
 \end{figure}
 
-Three findings recur across all tiers and all four datasets. First, validity is never violated: during
-every in-distribution period, including the heavy-tailed nominal-speed driving stream, the wealth stays
-below the threshold and $\hstar$ holds, matching Theorem~\ref{thm:validity}. Second, the frontier
+Three findings recur across all tiers and every real-world dataset. First, validity is never violated:
+during every in-distribution period, including the heavy-tailed nominal-speed driving stream, the wealth
+stays below the threshold and $\hstar$ holds, matching Theorem~\ref{thm:validity}. Second, the frontier
 collapses at the shift---sharply for dynamics shifts (speed, gait, ego-motion) and partially for a subtle
 appearance shift---always before an offline metric would react, indeed the offline horizon never reacts at
 all. Third, the behavior is model-agnostic, holding for linear, convolutional-autoencoder, and JEPA-style
 world models, as the theory requires.
+
+Nothing in the construction is specific to driving. The certification interface---a per-horizon predictive
+distribution scored against the realized observation---applies verbatim to any egocentric world model. A
+second safety-critical instance is aerial drone navigation, where a model predicts its own future view as
+the vehicle flies (Figure~\ref{fig:drone}). We are extending the same ego-motion monitoring study to this
+aerial domain; we include representative frames here to make the breadth of applicable settings concrete.
+
+\begin{figure}[t]\centering
+\includegraphics[width=\textwidth]{figures/drone_frames.png}
+\caption{Egocentric aerial drone video (Dronescapes \citep{pirvu2023dronescapes}): forward frames from a
+UAV flying over terrain. Together with the KITTI driving stream (Figure~\ref{fig:kitti-frames}), this
+illustrates the egocentric world-model settings---autonomous driving and aerial navigation---that ATLAS is
+designed to certify; the same scoring interface and guarantees apply without modification.}
+\label{fig:drone}
+\end{figure}
 
 \subsection{Comparison with competitor monitors}\label{sec:exp-baselines}
 

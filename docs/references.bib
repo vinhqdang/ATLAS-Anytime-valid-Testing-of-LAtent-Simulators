@@ -1,6 +1,5 @@
-% ATLAS — verified references (literature sweep, first pass).
-% Authors/years/titles verified against primary sources during the sweep; a few
-% exact page numbers / volume fields should be double-checked at submission time.
+% ATLAS — verified references. DOIs verified via Crossref / arXiv (July 2026).
+% arXiv-only works use the registered arXiv DOI (10.48550/arXiv.<id>).
 
 % ---------------------------------------------------------------- Foundations
 @article{ville1939,
@@ -15,14 +14,16 @@
   author    = {Vovk, Vladimir and Gammerman, Alexander and Shafer, Glenn},
   title     = {Algorithmic Learning in a Random World},
   publisher = {Springer},
-  year      = {2005}
+  year      = {2005},
+  doi       = {10.1007/b106715}
 }
 
 @book{shafer2019game,
   author    = {Shafer, Glenn and Vovk, Vladimir},
   title     = {Game-Theoretic Foundations for Probability and Finance},
   publisher = {Wiley},
-  year      = {2019}
+  year      = {2019},
+  doi       = {10.1002/9781118548035}
 }
 
 % ---------------------------------------------- Anytime-valid inference / betting
@@ -30,22 +31,24 @@
   author  = {Shafer, Glenn},
   title   = {Testing by betting: A strategy for statistical and scientific communication},
   journal = {Journal of the Royal Statistical Society: Series A},
-  volume  = {184}, number = {2}, pages = {407--431}, year = {2021}
+  volume  = {184}, number = {2}, pages = {407--431}, year = {2021},
+  doi     = {10.1111/rssa.12647}
 }
 
 @article{vovk2021evalues,
   author  = {Vovk, Vladimir and Wang, Ruodu},
   title   = {E-values: Calibration, combination and applications},
   journal = {The Annals of Statistics},
-  volume  = {49}, number = {3}, pages = {1736--1754}, year = {2021}
+  volume  = {49}, number = {3}, pages = {1736--1754}, year = {2021},
+  doi     = {10.1214/20-AOS2020}
 }
 
 @article{gruenwald2024safe,
   author  = {Gr{\"u}nwald, Peter and de Heide, Rianne and Koolen, Wouter M.},
   title   = {Safe testing},
   journal = {Journal of the Royal Statistical Society: Series B},
-  volume  = {86}, number = {5}, year = {2024},
-  note    = {arXiv:1906.07801; introduces GRO/GROW e-variables}
+  volume  = {86}, number = {5}, pages = {1091--1128}, year = {2024},
+  doi     = {10.1093/jrsssb/qkae011}
 }
 
 @article{waudbysmith2024betting,
@@ -53,14 +56,15 @@
   title   = {Estimating means of bounded random variables by betting},
   journal = {Journal of the Royal Statistical Society: Series B},
   volume  = {86}, number = {1}, pages = {1--27}, year = {2024},
-  note    = {arXiv:2010.09686; betting confidence sequences used by ATLAS}
+  doi     = {10.1093/jrsssb/qkad009}
 }
 
 @article{howard2021timeuniform,
   author  = {Howard, Steven R. and Ramdas, Aaditya and McAuliffe, Jon and Sekhon, Jasjeet},
   title   = {Time-uniform, nonparametric, nonasymptotic confidence sequences},
   journal = {The Annals of Statistics},
-  volume  = {49}, number = {2}, pages = {1055--1080}, year = {2021}
+  volume  = {49}, number = {2}, pages = {1055--1080}, year = {2021},
+  doi     = {10.1214/20-AOS1991}
 }
 
 @article{ramdas2023savi,
@@ -68,7 +72,7 @@
   title   = {Game-theoretic statistics and safe anytime-valid inference},
   journal = {Statistical Science},
   volume  = {38}, number = {4}, pages = {576--601}, year = {2023},
-  note    = {arXiv:2210.01948; survey}
+  doi     = {10.1214/23-STS894}
 }
 
 % ------------------------------------------------------ Sequential change detection
@@ -76,14 +80,16 @@
   author  = {Lorden, Gary},
   title   = {Procedures for reacting to a change in distribution},
   journal = {The Annals of Mathematical Statistics},
-  volume  = {42}, number = {6}, pages = {1897--1908}, year = {1971}
+  volume  = {42}, number = {6}, pages = {1897--1908}, year = {1971},
+  doi     = {10.1214/aoms/1177693055}
 }
 
 @article{lai1998information,
   author  = {Lai, Tze Leung},
   title   = {Information bounds and quick detection of parameter changes in stochastic systems},
   journal = {IEEE Transactions on Information Theory},
-  volume  = {44}, number = {7}, pages = {2917--2929}, year = {1998}
+  volume  = {44}, number = {7}, pages = {2917--2929}, year = {1998},
+  doi     = {10.1109/18.737522}
 }
 
 @article{shin2024edetectors,
@@ -91,7 +97,7 @@
   title   = {E-detectors: A nonparametric framework for sequential change detection},
   journal = {The New England Journal of Statistics in Data Science},
   year    = {2024},
-  note    = {arXiv:2203.03532}
+  doi     = {10.48550/arXiv.2203.03532}
 }
 
 % ------------------------------------------------------------- Conformal prediction
@@ -99,7 +105,8 @@
   author    = {Gibbs, Isaac and Cand{\`e}s, Emmanuel},
   title     = {Adaptive conformal inference under distribution shift},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-  year      = {2021}
+  year      = {2021},
+  doi       = {10.48550/arXiv.2106.00170}
 }
 
 @article{gibbs2024conformal,
@@ -107,14 +114,15 @@
   title   = {Conformal inference for online prediction with arbitrary distribution shifts},
   journal = {Journal of Machine Learning Research},
   year    = {2024},
-  note    = {arXiv:2208.08401}
+  doi     = {10.48550/arXiv.2208.08401}
 }
 
 @article{tibshirani2019covariate,
   author  = {Tibshirani, Ryan J. and Barber, Rina Foygel and Cand{\`e}s, Emmanuel and Ramdas, Aaditya},
   title   = {Conformal prediction under covariate shift},
   journal = {Advances in Neural Information Processing Systems (NeurIPS)},
-  year    = {2019}
+  year    = {2019},
+  doi     = {10.48550/arXiv.1904.06019}
 }
 
 % ------------------------------------------------------------- Proper scoring rules
@@ -122,7 +130,8 @@
   author  = {Gneiting, Tilmann and Raftery, Adrian E.},
   title   = {Strictly proper scoring rules, prediction, and estimation},
   journal = {Journal of the American Statistical Association},
-  volume  = {102}, number = {477}, pages = {359--378}, year = {2007}
+  volume  = {102}, number = {477}, pages = {359--378}, year = {2007},
+  doi     = {10.1198/016214506000001437}
 }
 
 % --------------------------------------------------- Model-based RL / simulation lemma
@@ -131,14 +140,15 @@
   title   = {Near-optimal reinforcement learning in polynomial time},
   journal = {Machine Learning},
   volume  = {49}, pages = {209--232}, year = {2002},
-  note    = {Simulation lemma}
+  doi     = {10.1023/A:1017984413808}
 }
 
 @inproceedings{janner2019mbpo,
   author    = {Janner, Michael and Fu, Justin and Zhang, Marvin and Levine, Sergey},
   title     = {When to trust your model: Model-based policy optimization},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-  year      = {2019}
+  year      = {2019},
+  doi       = {10.48550/arXiv.1906.08253}
 }
 
 @inproceedings{lobel2024tightness,
@@ -146,45 +156,50 @@
   title     = {An optimal tightness bound for the simulation lemma},
   booktitle = {Reinforcement Learning Conference (RLC)},
   year      = {2024},
-  note      = {arXiv:2406.16249}
+  doi       = {10.48550/arXiv.2406.16249}
 }
 
 % ------------------------------------------------------------------ World models
 @article{ha2018worldmodels,
   author  = {Ha, David and Schmidhuber, J{\"u}rgen},
   title   = {World models},
-  journal = {arXiv:1803.10122},
-  year    = {2018}
+  journal = {arXiv preprint arXiv:1803.10122},
+  year    = {2018},
+  doi     = {10.48550/arXiv.1803.10122}
 }
 
 @article{hafner2023dreamerv3,
   author  = {Hafner, Danijar and Pasukonis, Jurgis and Ba, Jimmy and Lillicrap, Timothy},
   title   = {Mastering diverse domains through world models},
-  journal = {arXiv:2301.04104},
+  journal = {arXiv preprint arXiv:2301.04104},
   year    = {2023},
-  note    = {DreamerV3}
+  note    = {DreamerV3},
+  doi     = {10.48550/arXiv.2301.04104}
 }
 
 @inproceedings{assran2023ijepa,
   author    = {Assran, Mahmoud and Duval, Quentin and Misra, Ishan and Bojanowski, Piotr and Vincent, Pascal and Rabbat, Michael and LeCun, Yann and Ballas, Nicolas},
   title     = {Self-supervised learning from images with a joint-embedding predictive architecture (I-JEPA)},
   booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-  year      = {2023}
+  year      = {2023},
+  doi       = {10.48550/arXiv.2301.08243}
 }
 
 @article{bardes2024vjepa,
   author  = {Bardes, Adrien and Garrido, Quentin and Ponce, Jean and Chen, Xinlei and Rabbat, Michael and LeCun, Yann and Assran, Mahmoud and Ballas, Nicolas},
-  title   = {V-JEPA: Latent video prediction for visual representation learning},
-  journal = {arXiv preprint},
-  year    = {2024}
+  title   = {Revisiting feature prediction for learning visual representations from video (V-JEPA)},
+  journal = {arXiv preprint arXiv:2404.08471},
+  year    = {2024},
+  doi     = {10.48550/arXiv.2404.08471}
 }
 
 @article{unterthiner2018fvd,
   author  = {Unterthiner, Thomas and van Steenkiste, Sjoerd and Kurach, Karol and Marinier, Rapha{\"e}l and Michalski, Marcin and Gelly, Sylvain},
   title   = {Towards accurate generative models of video: A new metric and challenges},
-  journal = {arXiv:1812.01717},
+  journal = {arXiv preprint arXiv:1812.01717},
   year    = {2018},
-  note    = {Fr{\'e}chet Video Distance (FVD)}
+  note    = {Fr{\'e}chet Video Distance (FVD)},
+  doi     = {10.48550/arXiv.1812.01717}
 }
 
 % ---------------------------------------------------------------- Datasets used
@@ -193,7 +208,8 @@
   title     = {Recognizing human actions: A local {SVM} approach},
   booktitle = {International Conference on Pattern Recognition (ICPR)},
   year      = {2004},
-  note      = {KTH Actions dataset}
+  note      = {KTH Actions dataset},
+  doi       = {10.1109/ICPR.2004.1334462}
 }
 
 @inproceedings{srivastava2015movingmnist,
@@ -201,14 +217,25 @@
   title     = {Unsupervised learning of video representations using {LSTM}s},
   booktitle = {International Conference on Machine Learning (ICML)},
   year      = {2015},
-  note      = {Moving MNIST}
+  note      = {Moving MNIST},
+  doi       = {10.48550/arXiv.1502.04681}
 }
 
 @article{geiger2013kitti,
   author  = {Geiger, Andreas and Lenz, Philip and Stiller, Christoph and Urtasun, Raquel},
   title   = {Vision meets robotics: The {KITTI} dataset},
   journal = {The International Journal of Robotics Research},
-  volume  = {32}, number = {11}, pages = {1231--1237}, year = {2013}
+  volume  = {32}, number = {11}, pages = {1231--1237}, year = {2013},
+  doi     = {10.1177/0278364913491297}
+}
+
+@inproceedings{pirvu2023dronescapes,
+  author    = {Mihai P{\^i}rvu and Alina Marcu and Alexandra Dobrescu and Nabil Belbachir and Marius Leordeanu},
+  title     = {Multi-task hypergraphs for semi-supervised learning using {Earth} observations},
+  booktitle = {IEEE/CVF International Conference on Computer Vision Workshops (ICCVW)},
+  year      = {2023},
+  note      = {Dronescapes aerial-drone video dataset},
+  doi       = {10.1109/ICCVW60793.2023.00365}
 }
 
 % ---------------------------------------------- 2025--2026 additions
@@ -223,7 +250,8 @@
              Michael Rabbat and Nicolas Ballas},
   title   = {{V-JEPA 2}: Self-supervised video models enable understanding, prediction and planning},
   journal = {arXiv preprint arXiv:2506.09985},
-  year    = {2025}
+  year    = {2025},
+  doi     = {10.48550/arXiv.2506.09985}
 }
 @inproceedings{bruce2024genie,
   author    = {Jake Bruce and Michael Dennis and Ashley Edwards and Jack Parker-Holder and
@@ -235,24 +263,28 @@
                Tim Rockt{\"a}schel},
   title     = {Genie: Generative interactive environments},
   booktitle = {International Conference on Machine Learning (ICML)},
-  year      = {2024}
+  year      = {2024},
+  doi       = {10.48550/arXiv.2402.15391}
 }
 @article{nvidia2025cosmos,
   author  = {{NVIDIA} and Niket Agarwal and Arslan Ali and Maciej Bala and
              Yogesh Balaji and others},
   title   = {Cosmos world foundation model platform for physical {AI}},
   journal = {arXiv preprint arXiv:2501.03575},
-  year    = {2025}
+  year    = {2025},
+  doi     = {10.48550/arXiv.2501.03575}
 }
 @article{opoku2026drift,
   author  = {Opoku, Jeffery and Banahene, David},
   title   = {Drift-aware spectral conformal prediction for non-exchangeable streaming data},
   journal = {arXiv preprint arXiv:2606.15953},
-  year    = {2026}
+  year    = {2026},
+  doi     = {10.48550/arXiv.2606.15953}
 }
 @article{leong2026online,
   author  = {Leong, Jun Wen},
   title   = {Online shift detection and conformal adaptation for deployed safety classifiers},
   journal = {arXiv preprint arXiv:2606.11949},
-  year    = {2026}
+  year    = {2026},
+  doi     = {10.48550/arXiv.2606.11949}
 }
