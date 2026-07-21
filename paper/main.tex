@@ -4,6 +4,7 @@
 \usepackage{bm}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{xcolor}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -717,15 +718,19 @@ below the $\log(1/\alpha_h)$ threshold (right).}
 \label{fig:validity}
 \end{figure}
 
-\subsection{Real-world data}\label{sec:exp-real}
+\subsection{Real-world video I: a lightweight latent world model}\label{sec:exp-real}
 
-We monitor a learned latent world model---principal-component features with a stabilized linear latent
-dynamics model, a deliberately lightweight but genuine latent simulator---on real image sequences. The
-tolerance $\eps_h$ is calibrated on held-out in-distribution clips, on the same statistic the test consumes
-(real-video score excess is heavy-tailed, so a naive window-level calibration is mis-scaled); deployment
-then runs in-distribution before switching regime at a known round. This subsection studies three shifts
-on Moving MNIST and KTH; the learned neural world models of Section~\ref{sec:exp-gpu} then add two more
-egocentric datasets---KITTI autonomous-driving video and real FPV drone flight video---both under ego-motion shifts.
+Our real-world evaluation spans \emph{four image-sequence datasets and two safety-critical egocentric
+domains}: Moving MNIST and the KTH human-action videos, monitored here with a lightweight latent world
+model; and KITTI autonomous-driving video and real first-person-view drone flight video, monitored with
+learned neural world models in Section~\ref{sec:exp-gpu}. Together they exercise four qualitatively distinct
+shifts---speed, gait, appearance, and ego-motion---on a ground vehicle and an aerial vehicle.
+
+This subsection takes the first step with a deliberately lightweight but genuine latent simulator:
+principal-component features with a stabilized linear latent dynamics model. The tolerance $\eps_h$ is
+calibrated on held-out in-distribution clips, on the same statistic the test consumes (real-video score
+excess is heavy-tailed, so a naive window-level calibration is mis-scaled); deployment then runs
+in-distribution before switching regime at a known round. We study three shifts on Moving MNIST and KTH.
 
 \emph{Moving MNIST \citep{srivastava2015movingmnist}: a speed (dynamics) shift.} The stream runs at the
 native frame rate, then switches to double speed---a dynamics change the native-rate model cannot track.
@@ -760,7 +765,7 @@ the two dynamics shifts, partially for the subtle domain shift.}
 \label{fig:real}
 \end{figure}
 
-\subsection{Learned neural world models: autonomous driving and aerial navigation}\label{sec:exp-gpu}
+\subsection{Real-world video II: learned neural world models (driving and aerial navigation)}\label{sec:exp-gpu}
 
 Finally we replace the linear world model with learned neural world models---which expose the same
 interface, namely a per-horizon predictive distribution scored against the realized outcome---to show that
@@ -868,51 +873,69 @@ $0$ once the dynamics shift opens.}
 
 The distinctive property of ATLAS is anytime validity: its false-alarm probability is controlled at
 \emph{every} round by construction. To quantify what this buys, we compare, on the controllable simulator
-where ground truth is known, against three standard and recent online drift monitors that consume the same
-one-step score stream: an offline \emph{fixed threshold}; a \emph{sliding-window $z$-test} (the sliding-window
-online-shift-detection family, e.g.\ \citealp{leong2026online}); and \emph{CUSUM}. The baselines'
-thresholds are calibrated on null runs to hit a $5\%$ false-alarm rate at a nominal monitoring horizon
-$T_{\mathrm{cal}}$; we then report the false-alarm rate at $T_{\mathrm{cal}}$, the rate at $3\,T_{\mathrm{cal}}$
-(longer monitoring, hence more looks), and the mean detection delay after a drift (Table~\ref{tab:baselines},
-Figure~\ref{fig:baselines}).
+where ground truth is known, against a suite of established detectors that consume the identical one-step
+score stream. They fall into two families. The first are \emph{change detectors} that control an average
+run length to false alarm and must be threshold-tuned: the classical CUSUM and Page--Hinkley tests
+\citep{page1954cusum}, ADWIN \citep{bifet2007adwin}, the Kolmogorov--Smirnov windowing detector KSWIN
+\citep{raab2020kswin}, Bayesian online changepoint detection \citep{adams2007bocpd}, and the recent
+e-detector framework \citep{shin2024edetectors}. The second are \emph{anytime-valid tests} that, like ATLAS,
+control the probability of \emph{ever} alarming and need no tuning: alongside ATLAS we include a conformal
+test martingale, representative of the contemporary online-conformal drift-monitoring line
+\citep{gibbs2021adaptive,opoku2026drift,leong2026online}. Each tunable detector's sensitivity is calibrated
+on null runs to a $5\%$ false-alarm rate at a nominal horizon $T_{\mathrm{cal}}$; we report the false-alarm
+rate at $T_{\mathrm{cal}}$, the rate at $3\,T_{\mathrm{cal}}$ (longer monitoring, hence more looks), and the
+mean detection delay after a drift (Table~\ref{tab:baselines}, Figure~\ref{fig:baselines}).
 
 \begin{table}[t]\centering
-\caption{ATLAS versus competitor drift monitors on the ground-truth simulator ($\alpha=0.05$). ATLAS keeps
-the false-alarm rate below $\alpha$ at both the calibration horizon and a $3\times$ longer one; the tuned
-baselines inflate their false-alarm rate under longer monitoring (the multiple-looks problem) and achieve
-lower delay only by alarming aggressively---i.e.\ by sacrificing validity.}
+\caption{ATLAS versus published detectors on the ground-truth simulator ($\alpha=0.05$). The anytime-valid
+tests (top group) keep the false-alarm rate below $\alpha$ at both the calibration horizon and a $3\times$
+longer one; the tuned change detectors (bottom group), calibrated to $5\%$ at $T_{\mathrm{cal}}$, inflate
+their false-alarm rate under longer monitoring---the multiple-looks problem---and attain lower delay only by
+alarming more aggressively. (BOCPD, tuned to the false-alarm target, is too conservative to detect this
+subtle drift; loosened to detect it, its false-alarm rate inflates like the others.)}
 \label{tab:baselines}
-\begin{tabular}{lccc}
+\begin{tabular}{llccc}
 \toprule
-monitor & FA @ $T_{\mathrm{cal}}$ & FA @ $3\,T_{\mathrm{cal}}$ & mean delay \\
+ & monitor & FA @ $T_{\mathrm{cal}}$ & FA @ $3\,T_{\mathrm{cal}}$ & mean delay \\
 \midrule
-\textbf{ATLAS} (e-process) & $\mathbf{0.000}$ & $\mathbf{0.003}$ & $53.8$ \\
-Fixed threshold            & $0.073$ & $0.173$ & $12.5$ \\
-Sliding $z$-test           & $0.073$ & $0.173$ & $12.5$ \\
-CUSUM                      & $0.060$ & $0.173$ & $13.4$ \\
+\multirow{2}{*}{\shortstack[l]{anytime-valid\\tests}}
+ & \textbf{ATLAS} (e-process)        & $\mathbf{0.000}$ & $\mathbf{0.003}$ & $53.8$ \\
+ & Conformal martingale              & $0.023$ & $0.023$ & $77.9$ \\
 \midrule
-target                     & $\le0.05$ & $\le0.05$ & --- \\
+\multirow{6}{*}{\shortstack[l]{change\\detectors\\(tuned)}}
+ & CUSUM \citep{page1954cusum}       & $0.113$ & $0.273$ & $12.2$ \\
+ & Page--Hinkley \citep{page1954cusum} & $0.050$ & $0.527$ & $30.4$ \\
+ & ADWIN \citep{bifet2007adwin}      & $0.040$ & $0.140$ & $23.8$ \\
+ & KSWIN \citep{raab2020kswin}       & $0.040$ & $0.087$ & $33.4$ \\
+ & BOCPD \citep{adams2007bocpd}      & $0.083$ & $0.083$ & --- \\
+ & e-detector \citep{shin2024edetectors} & $0.013$ & $0.197$ & $32.8$ \\
+\midrule
+ & target                            & $\le0.05$ & $\le0.05$ & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.9\textwidth]{figures/exp4_baselines.png}
-\caption{ATLAS versus competitor monitors. Left: false-alarm rate at the calibration horizon and at a
-$3\times$ longer horizon---only ATLAS stays below $\alpha$ (dashed) as monitoring continues; the tuned
-baselines inflate. Right: mean detection delay. The baselines' shorter delay is a direct consequence of the
-looser (invalid) alarm behavior seen on the left.}
+\includegraphics[width=\textwidth]{figures/exp4_baselines.png}
+\caption{ATLAS versus published detectors. Left: false-alarm rate at the calibration horizon and at a
+$3\times$ longer horizon. The anytime-valid tests (ATLAS and the conformal martingale, left of the divider)
+stay below $\alpha$ (dashed) as monitoring continues; every tuned change detector inflates. Right: mean
+detection delay; ``miss'' marks a detector that, at its calibrated sensitivity, fails to flag the drift.}
 \label{fig:baselines}
 \end{figure}
 
-The comparison makes the trade-off explicit. All baselines can be tuned to any single-horizon false-alarm
-target, but as \emph{online} monitors they are subject to the multiple-looks problem: continued monitoring
-multiplies their opportunities to alarm, so their false-alarm rate grows with the monitoring horizon (here
-from $\sim\!0.06$ to $\sim\!0.17$). ATLAS's rate instead stays below $\alpha$ at every horizon---this is
-Theorem~\ref{thm:validity}, not a tuning choice. The baselines' shorter detection delay is not a free lunch:
-it is bought with exactly the aggressive alarming that inflates their false-alarm rate. A practitioner who
-needs a guarantee that survives open-ended deployment has, to our knowledge, no alternative to the
-anytime-valid construction.
+The comparison makes the trade-off explicit and, we think, clarifies where ATLAS's contribution actually
+lies. Any change detector can be tuned to a single-horizon false-alarm target, but because it controls an
+average run length rather than an anytime error probability, continued monitoring multiplies its
+opportunities to alarm and its false-alarm rate grows with the horizon---from $5\%$ to as much as $53\%$ for
+Page--Hinkley, and rising for every detector including the recent e-detector. Their shorter detection delay
+is not a free lunch: it is bought with exactly this aggressive alarming. The anytime-valid tests do not
+inflate, because they bound the probability of \emph{ever} alarming (Theorem~\ref{thm:validity}); this is
+the right guarantee for open-ended deployment. Against those valid competitors ATLAS's advantage is not
+validity---the conformal martingale is valid too---but resolution: a scalar test answers only ``has
+something changed?'', whereas ATLAS returns the horizon-indexed certificate $\hstar(t)$, saying \emph{how
+far} the model may still be trusted. That per-horizon frontier, not merely a valid alarm, is what a planner
+needs to clip its imagination depth.
 
 \section{Discussion and conclusions}\label{sec:conclusion}
 
