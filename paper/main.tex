@@ -5,6 +5,7 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{placeins}
 \usepackage{xcolor}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -891,26 +892,30 @@ mean detection delay after a drift (Table~\ref{tab:baselines}, Figure~\ref{fig:b
 tests (top group) keep the false-alarm rate below $\alpha$ at both the calibration horizon and a $3\times$
 longer one; the tuned change detectors (bottom group), calibrated to $5\%$ at $T_{\mathrm{cal}}$, inflate
 their false-alarm rate under longer monitoring---the multiple-looks problem---and attain lower delay only by
-alarming more aggressively. (BOCPD, tuned to the false-alarm target, is too conservative to detect this
-subtle drift; loosened to detect it, its false-alarm rate inflates like the others.)}
+alarming more aggressively. References: CUSUM/Page--Hinkley \citep{page1954cusum}, ADWIN \citep{bifet2007adwin},
+KSWIN \citep{raab2020kswin}, BOCPD \citep{adams2007bocpd}, e-detector \citep{shin2024edetectors}, conformal
+martingale \citep{gibbs2021adaptive,leong2026online}. (BOCPD, tuned to the false-alarm target, is too
+conservative to detect this subtle drift; loosened to detect it, its false-alarm rate inflates like the others.)}
 \label{tab:baselines}
-\begin{tabular}{llccc}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}llccc@{}}
 \toprule
  & monitor & FA @ $T_{\mathrm{cal}}$ & FA @ $3\,T_{\mathrm{cal}}$ & mean delay \\
 \midrule
-\multirow{2}{*}{\shortstack[l]{anytime-valid\\tests}}
- & \textbf{ATLAS} (e-process)        & $\mathbf{0.000}$ & $\mathbf{0.003}$ & $53.8$ \\
- & Conformal martingale              & $0.023$ & $0.023$ & $77.9$ \\
+\multirow{2}{*}{\shortstack[l]{anytime-\\valid tests}}
+ & \textbf{ATLAS} (e-process) & $\mathbf{0.000}$ & $\mathbf{0.003}$ & $53.8$ \\
+ & Conformal martingale       & $0.023$ & $0.023$ & $77.9$ \\
 \midrule
 \multirow{6}{*}{\shortstack[l]{change\\detectors\\(tuned)}}
- & CUSUM \citep{page1954cusum}       & $0.113$ & $0.273$ & $12.2$ \\
- & Page--Hinkley \citep{page1954cusum} & $0.050$ & $0.527$ & $30.4$ \\
- & ADWIN \citep{bifet2007adwin}      & $0.040$ & $0.140$ & $23.8$ \\
- & KSWIN \citep{raab2020kswin}       & $0.040$ & $0.087$ & $33.4$ \\
- & BOCPD \citep{adams2007bocpd}      & $0.083$ & $0.083$ & --- \\
- & e-detector \citep{shin2024edetectors} & $0.013$ & $0.197$ & $32.8$ \\
+ & CUSUM         & $0.113$ & $0.273$ & $12.2$ \\
+ & Page--Hinkley & $0.050$ & $0.527$ & $30.4$ \\
+ & ADWIN         & $0.040$ & $0.140$ & $23.8$ \\
+ & KSWIN         & $0.040$ & $0.087$ & $33.4$ \\
+ & BOCPD         & $0.083$ & $0.083$ & --- \\
+ & e-detector (2024) & $0.013$ & $0.197$ & $32.8$ \\
 \midrule
- & target                            & $\le0.05$ & $\le0.05$ & --- \\
+ & target        & $\le0.05$ & $\le0.05$ & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -937,6 +942,7 @@ something changed?'', whereas ATLAS returns the horizon-indexed certificate $\hs
 far} the model may still be trusted. That per-horizon frontier, not merely a valid alarm, is what a planner
 needs to clip its imagination depth.
 
+\FloatBarrier
 \section{Discussion and conclusions}\label{sec:conclusion}
 
 We have introduced ATLAS, which gives a deployed world model something it has never had: a running,
