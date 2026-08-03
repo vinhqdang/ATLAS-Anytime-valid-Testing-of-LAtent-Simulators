@@ -1,0 +1,67 @@
+August 3, 2026
+
+Dear Editor,
+
+I am pleased to submit my manuscript, "ATLAS: Anytime-valid Testing of Latent Simulators —
+Sequential Certification of World-Model Faithfulness via E-Process Betting," for consideration
+as a research article in Pattern Recognition. This manuscript is original, has not been
+published previously, and is not under consideration elsewhere. I am the sole author and
+declare no competing interests.
+
+Importance and fit to scope. World models — learned, action-conditioned simulators used for
+video prediction, autonomous driving, and model-based decision making — are now central to
+pattern recognition research, yet the field still evaluates them with a single offline number
+(Frechet Video Distance, reconstruction error, return gap) computed once before deployment.
+This manuscript shows that such offline scores are structurally blind to how a world model's
+faithfulness actually behaves: it decays with rollout horizon and drifts over deployment time,
+especially once the model is embedded in a closed decision loop that endogenously shapes its
+own test data. We introduce ATLAS, which instead gives a deployed world model a running,
+anytime-valid statistical certificate — a trust horizon that a downstream planner can use
+directly to clip its imagination depth. The method is representation-agnostic (pixels, latent
+codes, or embeddings), requires no exchangeability assumption, and comes with three proved
+guarantees (uniform validity, an anytime-valid simulation lemma, and an order-optimal detection-
+delay bound), validated on a controllable synthetic simulator, four real video benchmarks
+(Moving MNIST, KTH Actions, KITTI driving, and UZH-FPV drone flight), and learned neural world
+models. This combination of sequential statistical testing, representation learning, and
+pattern-recognition benchmarks (video, driving, drone imagery) sits squarely within the scope of
+Pattern Recognition.
+
+Comparison to the state of the art. The manuscript positions ATLAS against, and empirically
+compares it with, recent representative work, including:
+  1. Shin, Ramdas, and Rinaldo (2024), "E-detectors: A nonparametric framework for sequential
+     change detection" — the closest anytime-valid change-detection framework, which we
+     specialize and compare against directly (Table 4).
+  2. Gibbs and Candes (2021), "Adaptive conformal inference under distribution shift," and its
+     2026 online-conformal descendants (Leong, 2026, "Online shift detection and conformal
+     adaptation for deployed safety classifiers"; Opoku and Banahene, 2026, "Drift-aware
+     spectral conformal prediction for non-exchangeable streaming data") — representative of
+     the conformal-prediction line we compare against as an anytime-valid baseline and discuss
+     as lacking a horizon-resolved, endogeneity-robust guarantee.
+  3. Assran et al. (2025), "V-JEPA 2: Self-supervised video models enable understanding,
+     prediction and planning" — a state-of-the-art action-conditioned video world model that
+     exemplifies the class of representation ATLAS is designed to certify.
+  4. NVIDIA et al. (2025), "Cosmos world foundation model platform for physical AI" — a
+     state-of-the-art large-scale physical-AI world-model platform illustrating the deployment
+     setting (offline-evaluated, production world models) that motivates this work.
+We are not aware of prior work that gives a horizon-resolved, anytime-valid faithfulness
+certificate for world models under policy-endogenous data; Section 1.4 (Related work) and
+Section 5.4 (Comparison with competitor monitors) detail this positioning and the empirical
+gap quantitatively.
+
+Relationship to prior publications. This manuscript is not an extension of a previously
+published conference paper; it is original, full-length work.
+
+AI-assistance disclosure. Generative AI (Claude, via Claude Code) was used to help draft, edit,
+and polish portions of the manuscript text, as disclosed in the manuscript itself. I reviewed
+all AI-assisted content and take full responsibility for the paper.
+
+Thank you for considering this manuscript. I would be glad to suggest reviewers or provide any
+further information the editorial process requires.
+
+Sincerely,
+
+Quang-Vinh Dang
+
+British University Vietnam, Hung Yen, Vietnam
+
+vinh.dq4@buv.edu.vn
