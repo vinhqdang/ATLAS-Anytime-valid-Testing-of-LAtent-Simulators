@@ -2,10 +2,15 @@ August 4, 2026
 
 Dear Dr. Dardour and the Editorial Team of Pattern Recognition,
 
-Thank you for reviewing my submission, "ATLAS: Anytime-Valid Certification of World-Model
-Faithfulness via E-Process Betting" (Manuscript Number: [INSERT MANUSCRIPT NUMBER]), and for
-the detailed formatting and desk-check comments. I have thoroughly revised the manuscript to
-address every point raised and describe each change below.
+RE-SUBMISSION of Ms. Ref. No. PR-D-26-10696, previously titled "ATLAS: Anytime-valid Testing of
+Latent Simulators -- Sequential Certification of World-Model Faithfulness via E-Process Betting."
+
+Thank you for your letter regarding Ms. Ref. No. PR-D-26-10696 and for the detailed formatting
+and desk-check comments. This is a re-submission of that manuscript, now retitled "ATLAS:
+Anytime-Valid Certification of World-Model Faithfulness via E-Process Betting" per Comment 1
+below. I have thoroughly revised the manuscript to address every point raised and describe each
+change below; please retain this submission under the same manuscript reference, PR-D-26-10696,
+if your system allows, or treat it as the direct resubmission of that reference otherwise.
 
 POINT-BY-POINT RESPONSE
 
