@@ -1,4 +1,4 @@
-\documentclass[preprint,authoryear,12pt]{elsarticle}
+\documentclass[times,review,10pt]{elsarticle}
 
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{bm}
@@ -44,10 +44,9 @@
 
 \begin{frontmatter}
 
-\title{ATLAS: Anytime-valid Testing of Latent Simulators\\
-Sequential Certification of World-Model Faithfulness via E-Process Betting}
+\title{ATLAS: Anytime-Valid Certification of World-Model Faithfulness via E-Process Betting}
 
-\author[buv]{Quang-Vinh Dang}
+\author[buv]{\fontsize{8}{9.6}\selectfont Quang-Vinh Dang}
 \ead{vinh.dq4@buv.edu.vn}
 \affiliation[buv]{organization={British University Vietnam}, city={Hung Yen}, country={Vietnam}}
 
@@ -235,7 +234,12 @@ covariate-shift \citep{tibshirani2019covariate} and adaptive or online variants
 drift, and a very recent line adapts conformal or windowed statistics online to streaming
 distribution shift---drift-aware spectral conformal prediction for non-exchangeable streams
 \citep{opoku2026drift} and online shift detection with conformal adaptation for deployed
-classifiers \citep{leong2026online}. These methods target marginal coverage rather than an
+classifiers \citep{leong2026online}. Closer to our journal's own readership, Msaddi and Kumbasar
+\citep{msaddi2025expanding} extend split conformal prediction to system identification, giving
+distribution-free prediction intervals for a \emph{fitted} dynamical model's parameters; this is
+complementary to our setting, which certifies a deployed model's rollout faithfulness online
+rather than quantifying identification uncertainty at fit time. Across this whole family, the
+common limitation is the same: these methods target marginal coverage rather than an
 anytime-valid per-horizon guarantee, degrade under recursive multi-step rollouts, and presume
 an exogenous data-generating mechanism; moreover, as online monitors they control the
 false-alarm rate only at a tuned horizon and inflate it under continued monitoring (the
@@ -249,7 +253,13 @@ representatives of these families and quantifies the difference.
 video predictors \citep{assran2025vjepa2}, interactive generative environments
 \citep{bruce2024genie}, and physical-AI foundation models \citep{nvidia2025cosmos}. Their
 evaluation, however, has remained offline: Fr\'echet Video Distance \citep{unterthiner2018fvd},
-reconstruction metrics, and return gaps all report a single static number. ATLAS provides the missing online, guaranteed, horizon-resolved
+reconstruction metrics, and return gaps all report a single static number. A related but distinct
+line within pattern recognition studies video-level anomaly detection directly, e.g.\ weakly
+supervised, semantic-driven dual-consistency learning that flags anomalous frames within an
+offline-trained detector \citep{su2025semantic}; such methods localize anomalies \emph{within} a
+fixed clip rather than certifying, online and with a time-uniform guarantee, whether a generative
+model's own rollouts remain faithful as deployment continues---the question ATLAS answers. ATLAS
+provides the missing online, guaranteed, horizon-resolved
 certificate, and because it scores in whatever space the model predicts, it applies uniformly
 across these architectures.
 
@@ -386,7 +396,10 @@ statistic---the score advantage---designed so that the null controls its conditi
 H_0^{(h)}\ \Longrightarrow\ \E\big[Z_k\mid\Fcal_{k-1}\big]\ \le\ \eps_h\qquad\text{for all }k.
 \end{equation}
 For instance, with a predictable calibrated reference predictor $R_k$, taking
-$Z_k=S(P^M_{s_k,h},Y^{(h)}_{s_k})-S(R_k,Y^{(h)}_{s_k})$ makes \eqref{eq:null-mean} the statement that
+\[
+Z_k=S(P^M_{s_k,h},Y^{(h)}_{s_k})-S(R_k,Y^{(h)}_{s_k})
+\]
+makes \eqref{eq:null-mean} the statement that
 the model does not lose to the reference by more than $\eps_h$; with a latent Gaussian predictive,
 taking $Z_k=\mathrm{mahalanobis}^2/d-1$ makes $\E[Z_k\mid\Fcal_{k-1}]=0$ under exact calibration, so
 \eqref{eq:null-mean} holds with $\eps_h=0$.
@@ -622,9 +635,15 @@ the e-detector; and \emph{(b)} with probability at least $1-\alpha$,
 T-\tau\ \le\ \frac{\log(1/\alpha)}{D^\star}\,(1+o(1)),\qquad
 D^\star=\sup_{\lambda\in[0,\lambda_{\max}]}\E_{\mathrm{post}}\!\big[\log(1+\lambda(Z-\eps_1))\big],
 \]
-with $D^\star\ge\Delta^2/\big(2(\sigma^2+B'\Delta/3)\big)$ for the bounded score, hence
-$T-\tau\lesssim 2(\sigma^2+B'\Delta/3)\log(1/\alpha)/\Delta^2$. This matches the Lorden/Lai lower bound up
-to constants, so ATLAS is order-optimal.
+with
+\[
+D^\star\ \ge\ \frac{\Delta^2}{2(\sigma^2+B'\Delta/3)}
+\]
+for the bounded score, hence
+\[
+T-\tau\ \lesssim\ \frac{2(\sigma^2+B'\Delta/3)\log(1/\alpha)}{\Delta^2}.
+\]
+This matches the Lorden/Lai lower bound up to constants, so ATLAS is order-optimal.
 \end{theorem}
 \begin{proof}
 (a) The e-process claim is Theorem~\ref{thm:validity}. For the e-detector, $\E[R_t\mid\Fcal_{t-1}]=
@@ -945,31 +964,73 @@ needs to clip its imagination depth.
 \FloatBarrier
 \section{Discussion and conclusions}\label{sec:conclusion}
 
-We have introduced ATLAS, which gives a deployed world model something it has never had: a running,
-anytime-valid certificate of faithfulness. The certificate is a trust horizon $\hstar(t)$ that collapses
-precisely when reality drifts from imagination, backed by three guarantees we proved in full---a uniform
-no-false-revocation theorem, an anytime-valid simulation lemma linking certified one-step error to the
-$h$-step value gap, and an order-optimal detection-delay bound. The construction is representation- and
-model-agnostic, requires no exchangeability, and converts a passive monitor into a planning controller by
-clipping imagination depth to the certified horizon. Across a ground-truth simulator, real human-action and
-video-benchmark data, and learned neural world models, ATLAS behaves exactly as the theory predicts, while
-the offline metrics in universal use today stay blind.
+The community evaluates world models with a single offline number, yet faithfulness is a horizon-indexed,
+time-varying quantity, and no prior tool reports it as such while remaining valid on the policy-endogenous
+streams that model-based deployment actually produces. ATLAS closes this gap by turning faithfulness
+certification into a betting game: each horizon accumulates wealth against a conditional-mean null, Ville's
+inequality converts that wealth into a time-uniform guarantee, and the resulting frontier $\hstar(t)$ is
+simultaneously a diagnostic and a control signal that a planner can clip its imagination depth to. We proved
+this sound in three complementary senses---no false revocation at any stopping time, a time-uniform lift of
+the classical simulation lemma to a running confidence sequence, and an order-optimal detection delay
+matching the Lorden/Lai bound---and confirmed it empirically on a ground-truth simulator, four real video
+benchmarks spanning speed, gait, appearance, and ego-motion shifts, and three learned world-model
+architectures.
 
-Several limitations delineate the scope and point to future work. Our controlled study uses an exogenous
-behavior policy to obtain an exact null against which Type-I error can be measured; the fully
-policy-in-the-loop regime is the ultimate target, and while the conditional construction remains valid there
-for the same reason, quantifying power under closed-loop feedback is natural future work. Non-overlapping
-windows make long horizons genuinely slower to certify because they receive fewer effective samples; the
-interleaved variant of Remark~\ref{rem:interleave} mitigates but does not eliminate this intrinsic price of
-honest multi-step testing. Certificate quality is bounded by world-model quality: a low-capacity or overfit
-model produces a non-stationary in-distribution null, which can mask or spuriously trigger revocation, and
-our JEPA experiment makes the remedy concrete---a representation that generalizes across nuisance factors
-restores a clean certificate. Finally, the tolerances $\eps_h$ are modeling choices that define what
-``faithful'' means; we calibrate them to the in-distribution level so that ATLAS certifies departures from
-the model's own baseline, but a fixed absolute tolerance or a risk-derived budget is equally admissible and
-changes only the interpretation, not the validity. As world models move from benchmarks into deployed
-decision loops, we believe a running, valid faithfulness certificate will be not a luxury but a requirement,
-and ATLAS offers a principled foundation for it.
+\paragraph{Strengths} The construction's central strength is what it does not assume: because every bet is
+conditioned on the entire past, validity never invokes independence or exchangeability, so ATLAS is, to our
+knowledge, the first faithfulness certificate sound on a stream shaped by the very policy being optimized
+through the model under test---the regime that defeats conformal prediction and its covariate-shift
+variants. A second strength is representation-agnosticism: the identical procedure, with no retuning,
+certified a linear latent-Gaussian model, a convolutional autoencoder, and a frozen-encoder JEPA-style model,
+on both a ground vehicle and an aerial vehicle. A third is that the certificate is actionable, not merely
+diagnostic---$\hstar(t)$ carries a time-uniform guarantee a planner can legally clip its rollout depth to,
+which is what separates a monitor from a controller. Finally, the comparison against six published detectors
+(Table~\ref{tab:baselines}) shows this validity is not wasteful: ATLAS matches or beats every anytime-valid
+competitor on detection delay, while every tuned change detector buys its shorter delay by silently
+inflating its false-alarm rate under continued monitoring---exactly the failure a deployed safety certificate
+cannot afford.
+
+\paragraph{Weaknesses and limitations} Four limitations bound this work's scope. First, our controlled
+validation of Theorems~\ref{thm:validity}--\ref{thm:delay} uses an exogenous behavior policy to obtain an
+exact null; the conditional construction remains valid under closed policy-in-the-loop feedback
+(Section~\ref{sec:endo}), but we have not \emph{measured} statistical power there, and an optimizing policy
+could in principle seek out states where the error is hardest to detect. Second, the non-overlapping
+windowing that restores the conditional-mean null (Section~\ref{sec:overlap}) is a real cost: horizon $h$
+receives $h$ times fewer updates than horizon $1$, and the interleaved variant of Remark~\ref{rem:interleave}
+mitigates but does not eliminate this. Third, certificate quality is bounded by world-model quality: a
+low-capacity, overfit, or nuisance-sensitive model yields a non-stationary in-distribution null that can mask
+or spuriously trigger revocation, as our JEPA-versus-convolutional comparison on KTH shows concretely.
+Fourth, the tolerance $\eps_h$ and scoring rule $S$ are modeling choices, not outputs of the theory; we
+calibrate $\eps_h$ to the in-distribution score level, a weaker notion than an absolute, risk-derived
+faithfulness budget, and the theory accommodates either but leaves the choice to the practitioner.
+Maintaining $H$ parallel e-processes is also a modest, non-zero compute cost that a constrained deployment
+may need to amortize over a coarser horizon grid.
+
+\paragraph{How the field can build on this} Practitioners deploying a model-based agent or video-prediction
+pipeline can adopt the trust horizon as a drop-in safety gate: it needs only a predictive distribution and a
+realized outcome, so it attaches to an existing model without retraining, and Algorithm~\ref{alg:atlas} is a
+complete specification of the procedure. Researchers working on conformal and other distribution-free
+monitoring for non-exchangeable or policy-dependent streams can use the audit of
+Section~\ref{sec:exp-baselines} as a template, since the multiple-looks inflation documented there is a
+generic failure of average-run-length detectors, not one specific to world models. More broadly, the
+conditional betting construction of Section~\ref{sec:betting} applies to any sequentially-revealed,
+strictly-proper-scored prediction stream under an unknown, possibly endogenous process---time-series
+forecast auditing, streaming drift detection in deployed pattern-recognition systems, and calibration
+monitoring for generative models are direct extensions of the same machinery.
+
+\paragraph{Future work} Quantifying statistical power, not only validity, under fully closed-loop policy
+optimization is the most pressing open question. A risk-calibrated choice of $\eps_h$, tied to a downstream
+control-performance budget rather than the in-distribution score level, would sharpen what ``faithful''
+means without touching the validity proof. On the theory side, tightening the interleaved estimator,
+characterizing near-optimal betting under a nonstationary alternative, and extending the simulation lemma
+beyond Assumption~\ref{as:rollout}'s two regularity regimes are natural directions. On the applied side, we
+are particularly interested in multi-modal, language-conditioned world models, where the target space
+$\Ycal$ mixes discrete and continuous structure, and in hardware-in-the-loop studies measuring whether
+clipping imagination depth to $\hstar(t)$ improves closed-loop task performance and safety on a physical
+robot, not only whether the certificate itself is statistically sound. As world models move from benchmark
+leaderboards into deployed decision loops, we believe a running, anytime-valid faithfulness certificate will
+become a requirement rather than a luxury, and ATLAS offers a principled, representation-agnostic foundation
+for building one.
 
 \section*{CRediT authorship contribution statement}
 \textbf{Quang-Vinh Dang:} Conceptualization, Methodology, Formal analysis, Software, Investigation,
@@ -985,7 +1046,7 @@ not-for-profit sectors.
 
 \section*{Data and code availability}
 The methods and all reported experiments are reproducible from the accompanying open-source implementation,
-available at \url{https://github.com/vinhqdang/ATLAS-Anytime-valid-Testing-of-LAtent-Simulators} (BSD-3-Clause
+available at \href{https://github.com/vinhqdang/ATLAS-Anytime-valid-Testing-of-LAtent-Simulators}{github.com/vinhqdang/ATLAS-Anytime-valid-Testing-of-LAtent-Simulators} (BSD-3-Clause
 licence), together with the publicly available Moving MNIST, KTH Actions, KITTI, and UZH-FPV drone-racing
 datasets. No new data were generated. The experiments use no human subjects or personal data beyond these
 established public benchmarks.
@@ -996,7 +1057,7 @@ writing assistant (Claude Code), to help draft, edit, and polish portions of the
 using this tool, the author reviewed and edited the content as needed and takes full responsibility for
 the content of the published article.
 
-\bibliographystyle{elsarticle-harv}
+\bibliographystyle{elsarticle-num}
 \bibliography{references}
 
 \end{document}
