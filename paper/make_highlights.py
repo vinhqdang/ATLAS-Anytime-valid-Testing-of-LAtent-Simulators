@@ -9,8 +9,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.enums import TA_LEFT
 
-TITLE = ("ATLAS: Anytime-valid Testing of Latent Simulators — "
-         "Sequential Certification of World-Model Faithfulness via E-Process Betting")
+TITLE = "ATLAS: Anytime-Valid Certification of World-Model Faithfulness via E-Process Betting"
 
 HIGHLIGHTS = [
     "ATLAS gives world models a running, anytime-valid faithfulness certificate.",

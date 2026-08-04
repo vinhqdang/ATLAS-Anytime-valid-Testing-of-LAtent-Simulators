@@ -1,62 +1,133 @@
-August 3, 2026
+August 4, 2026
 
-Dear Editor,
+Dear Dr. Dardour and the Editorial Team of Pattern Recognition,
 
-I am pleased to submit my manuscript, "ATLAS: Anytime-valid Testing of Latent Simulators —
-Sequential Certification of World-Model Faithfulness via E-Process Betting," for consideration
-as a research article in Pattern Recognition. This manuscript is original, has not been
-published previously, and is not under consideration elsewhere. I am the sole author and
-declare no competing interests.
+Thank you for reviewing my submission, "ATLAS: Anytime-Valid Certification of World-Model
+Faithfulness via E-Process Betting" (Manuscript Number: [INSERT MANUSCRIPT NUMBER]), and for
+the detailed formatting and desk-check comments. I have thoroughly revised the manuscript to
+address every point raised and describe each change below.
 
-Importance and fit to scope. World models — learned, action-conditioned simulators used for
-video prediction, autonomous driving, and model-based decision making — are now central to
+POINT-BY-POINT RESPONSE
+
+Specific Comments
+
+1. Title length and grammar. The title is now a single, succinct line: "ATLAS: Anytime-Valid
+   Certification of World-Model Faithfulness via E-Process Betting" (9 words), replacing the
+   previous two-line title-plus-subtitle.
+
+2. Single-column, double-spaced, 10pt format via the official template. The manuscript is now
+   typeset with \documentclass[times, review, 10pt]{elsarticle} exactly as specified, using the
+   Elsevier elsarticle class (single column, "review" double line spacing, Times font, 10pt base
+   size).
+
+3. Equations. All equations remain native, editable LaTeX (no images) and now render at the
+   document's 10pt base size. Several equations that overflowed the narrower single-column
+   measure under the new template were reflowed into shorter displayed equations to fit cleanly
+   within the text width.
+
+4. Table font size and style. Both tables (Table 1, Table 2) are set at the document's 10pt base
+   size (well above the 8pt minimum), use only horizontal booktabs rules (no vertical rules, no
+   cell shading), and remain in standard portrait orientation.
+
+5. Footnote, author name, affiliation, and caption font size. Footnotes and figure/table captions
+   use LaTeX's \footnotesize, which resolves to exactly 8pt at the document's 10pt base size. The
+   author name and affiliation block, which the class otherwise typesets at 10pt, has been
+   explicitly set to 8pt to match.
+
+6. Figure/table placement. All figures and tables are placed with standard floating placement
+   close to their first in-text reference; I verified programmatically that every figure/table
+   lands within 0-3 pages of the paragraph that first cites it, consistent with the surrounding
+   figure-dense sections.
+
+7. Reference count (35-55). The reference list now contains 39 entries, within the requested
+   range for a regular paper.
+
+8. Reference numbering by order of appearance. The bibliography style was switched from an
+   author-year (Harvard) style to elsarticle-num, which numbers references [1], [2], ... in the
+   order they are first cited in the text; I verified this ordering in the compiled PDF.
+
+9. Page limit (20-35 pages, excluding Highlights, Author Biography, and Declaration of Interest).
+   The revised manuscript is 34 pages including the reference list, within the limit. This
+   despite substantial content growth (an expanded Discussion and conclusions section, two new
+   citations with individual discussion), made possible by the more compact 10pt Times setting.
+
+General Comments
+
+(a) Title. Addressed under Specific Comment 1 above.
+
+(b) Conclusions distinct from and longer than the abstract, covering strengths, weaknesses,
+    benefit to the field, and future work. Section 6 ("Discussion and conclusions") has been
+    substantially rewritten and expanded (from roughly 370 words to roughly 850 words, versus a
+    371-word abstract) into four explicit parts: Strengths (what the construction does not
+    assume, representation-agnosticism, actionability, and the empirical delay/validity
+    trade-off versus six published detectors); Weaknesses and limitations (four concrete
+    limitations: unmeasured power under closed-loop policy feedback, the statistical cost of
+    non-overlapping windows, dependence on world-model/representation quality, and the modeling
+    choices embedded in the tolerance and scoring rule); How the field can build on this (three
+    concrete adoption paths: a drop-in safety gate for practitioners, an audit template for
+    conformal-monitoring researchers, and the generality of the betting construction to other
+    sequentially-scored streams in pattern recognition); and Future work (closed-loop power,
+    risk-calibrated tolerances, tightened interleaving, nonstationary-optimal betting, multi-modal
+    world models, and hardware-in-the-loop validation).
+
+(c) Bibliography currency, diversity, and avoiding uncommented citation groups. I reviewed every
+    citation group in Related Work; the largest group is three references, and each group is
+    already attached to a named method or result rather than a bare list. I added two individually
+    discussed 2024-2025 citations from Pattern Recognition itself (see (d) below) and confirmed the
+    bibliography is not concentrated in a single conference series or dominated by arXiv-only
+    preprints (9 of 39 references, or 23%, are arXiv-only; the remainder are published journal or
+    conference papers spanning NeurIPS, CVPR, SDM, ICPR, ICML, RLC, and statistics journals
+    including the Annals of Statistics, JRSS-A/B, and JMLR).
+
+(d) Relevance to the Pattern Recognition readership. I added and individually discussed two recent
+    papers published in Pattern Recognition itself: Msaddi and Kumbasar (2025), "Expanding
+    conformal prediction to system identification" (Pattern Recognition), which extends conformal
+    prediction to dynamical-system identification and is contrasted with ATLAS's online,
+    deployment-time rollout certificate in the Related Work section; and Su, Tan, An, Xing, and
+    Feng (2024), "Semantic-driven dual consistency learning for weakly supervised video anomaly
+    detection" (Pattern Recognition, vol. 157, art. 110898), which is contrasted with ATLAS as an
+    offline, frame-level anomaly localizer rather than a time-uniform faithfulness certificate for
+    a generative model's own rollouts.
+
+(e) Page and format limits. Addressed under Specific Comments 2 and 9 above; the manuscript is
+    single-column, double-spaced, and 34 pages.
+
+ADDITIONAL SUBMISSION INFORMATION (unchanged from the original submission)
+
+Importance and fit to scope. World models -- learned, action-conditioned simulators used for
+video prediction, autonomous driving, and model-based decision making -- are now central to
 pattern recognition research, yet the field still evaluates them with a single offline number
-(Frechet Video Distance, reconstruction error, return gap) computed once before deployment.
-This manuscript shows that such offline scores are structurally blind to how a world model's
+(Frechet Video Distance, reconstruction error, return gap) computed once before deployment. This
+manuscript shows that such offline scores are structurally blind to how a world model's
 faithfulness actually behaves: it decays with rollout horizon and drifts over deployment time,
-especially once the model is embedded in a closed decision loop that endogenously shapes its
-own test data. We introduce ATLAS, which instead gives a deployed world model a running,
-anytime-valid statistical certificate — a trust horizon that a downstream planner can use
-directly to clip its imagination depth. The method is representation-agnostic (pixels, latent
-codes, or embeddings), requires no exchangeability assumption, and comes with three proved
-guarantees (uniform validity, an anytime-valid simulation lemma, and an order-optimal detection-
-delay bound), validated on a controllable synthetic simulator, four real video benchmarks
-(Moving MNIST, KTH Actions, KITTI driving, and UZH-FPV drone flight), and learned neural world
-models. This combination of sequential statistical testing, representation learning, and
-pattern-recognition benchmarks (video, driving, drone imagery) sits squarely within the scope of
-Pattern Recognition.
+especially once the model is embedded in a closed decision loop that endogenously shapes its own
+test data. ATLAS instead gives a deployed world model a running, anytime-valid statistical
+certificate -- a trust horizon that a downstream planner can use directly to clip its imagination
+depth -- validated on a controllable synthetic simulator, four real video benchmarks (Moving
+MNIST, KTH Actions, KITTI driving, and UZH-FPV drone flight), and learned neural world models.
 
 Comparison to the state of the art. The manuscript positions ATLAS against, and empirically
-compares it with, recent representative work, including:
-  1. Shin, Ramdas, and Rinaldo (2024), "E-detectors: A nonparametric framework for sequential
-     change detection" — the closest anytime-valid change-detection framework, which we
-     specialize and compare against directly (Table 4).
-  2. Gibbs and Candes (2021), "Adaptive conformal inference under distribution shift," and its
-     2026 online-conformal descendants (Leong, 2026, "Online shift detection and conformal
-     adaptation for deployed safety classifiers"; Opoku and Banahene, 2026, "Drift-aware
-     spectral conformal prediction for non-exchangeable streaming data") — representative of
-     the conformal-prediction line we compare against as an anytime-valid baseline and discuss
-     as lacking a horizon-resolved, endogeneity-robust guarantee.
-  3. Assran et al. (2025), "V-JEPA 2: Self-supervised video models enable understanding,
-     prediction and planning" — a state-of-the-art action-conditioned video world model that
-     exemplifies the class of representation ATLAS is designed to certify.
-  4. NVIDIA et al. (2025), "Cosmos world foundation model platform for physical AI" — a
-     state-of-the-art large-scale physical-AI world-model platform illustrating the deployment
-     setting (offline-evaluated, production world models) that motivates this work.
-We are not aware of prior work that gives a horizon-resolved, anytime-valid faithfulness
-certificate for world models under policy-endogenous data; Section 1.4 (Related work) and
-Section 5.4 (Comparison with competitor monitors) detail this positioning and the empirical
-gap quantitatively.
+compares it with, recent representative work, including Shin, Ramdas, and Rinaldo (2024,
+"E-detectors"), the closest anytime-valid change-detection framework, compared against directly
+in Table 2; Gibbs and Candes (2021) and its 2025-2026 online-conformal descendants (Leong, 2026;
+Opoku and Banahene, 2026), representative of the conformal-prediction baselines in Table 2;
+Assran et al. (2025, "V-JEPA 2") and NVIDIA et al. (2025, "Cosmos"), state-of-the-art world models
+exemplifying the class of representation ATLAS certifies; and, newly added in this revision,
+Msaddi and Kumbasar (2025) and Su et al. (2024) from Pattern Recognition itself. We are not aware
+of prior work that gives a horizon-resolved, anytime-valid faithfulness certificate for world
+models under policy-endogenous data.
 
-Relationship to prior publications. This manuscript is not an extension of a previously
-published conference paper; it is original, full-length work.
+Relationship to prior publications. This manuscript is not an extension of a previously published
+conference paper; it is original, full-length work.
 
 AI-assistance disclosure. Generative AI (Claude, via Claude Code) was used to help draft, edit,
-and polish portions of the manuscript text, as disclosed in the manuscript itself. I reviewed
-all AI-assisted content and take full responsibility for the paper.
+and polish portions of the manuscript text, as disclosed in the manuscript itself. I reviewed all
+AI-assisted content and take full responsibility for the paper.
 
-Thank you for considering this manuscript. I would be glad to suggest reviewers or provide any
-further information the editorial process requires.
+Thank you for the opportunity to revise the manuscript. I believe it now fully complies with the
+journal's formatting requirements and have strengthened its content and positioning accordingly.
+I would be glad to suggest reviewers or provide any further information the editorial process
+requires.
 
 Sincerely,
 
