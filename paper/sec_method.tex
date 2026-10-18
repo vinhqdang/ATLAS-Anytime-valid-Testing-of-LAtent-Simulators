@@ -1,0 +1,103 @@
+\section{The ATLAS method}\label{sec:method}
+
+\subsection{E-processes and Ville's inequality}
+
+An \emph{e-variable} for a null is a nonnegative random variable with expectation at most one under
+it. A \emph{test supermartingale} is a process $W_0=1$, $W_k=\prod_{j\le k}e_j$ with $\E[e_j\mid\Fcal_{j-1}]\le1$
+under the null. The engine of time-uniform validity is classical.
+
+\begin{lemma}[Ville \citeyear{ville1939}]\label{lem:ville}
+If $(W_k)_{k\ge0}$ is a nonnegative supermartingale with $W_0=1$ then $\PR(\sup_kW_k\ge1/\alpha)\le\alpha$.
+\end{lemma}
+
+\subsection{The per-horizon betting e-process}\label{sec:betting}
+
+Fix a horizon $h$ and a statistic $Z_k\in[z_{\mathrm{lo}},z_{\mathrm{hi}}]$ calibrated at $\eps_h$
+(Definition~\ref{def:cert}), so that the faithfulness null implies
+\begin{equation}\label{eq:null-mean}
+\E[Z_k\mid\Fcal_{k-1}]\le\eps_h\qquad\text{for all }k.
+\end{equation}
+For a predictable bet $\lambda_k\in[0,\lambda_{\max}]$ with $\lambda_{\max}=1/(z_{\mathrm{hi}}-z_{\mathrm{lo}})$ set
+\begin{equation}\label{eq:evar}
+e_k\defeq1+\lambda_k(Z_k-\eps_h),\qquad W^{(h)}_K\defeq\prod_{k\le K}e_k .
+\end{equation}
+
+\begin{proposition}[Per-round validity]\label{prop:evar}
+If \eqref{eq:null-mean} holds and $\eps_h\in[z_{\mathrm{lo}},z_{\mathrm{hi}}]$ then $e_k\ge0$ and
+$\E[e_k\mid\Fcal_{k-1}]\le1$; hence $W^{(h)}$ is a test supermartingale.
+\end{proposition}
+\begin{proof}
+$e_k\ge1-\lambda_{\max}(\eps_h-z_{\mathrm{lo}})\ge0$, and
+$\E[e_k\mid\Fcal_{k-1}]=1+\lambda_k(\E[Z_k\mid\Fcal_{k-1}]-\eps_h)\le1$ because $\lambda_k$ is predictable.
+\end{proof}
+
+The bet governs power, not validity. We use a uniform mixture over a grid
+$\lambda^{(1)},\dots,\lambda^{(m)}\in(0,\lambda_{\max}]$: a convex combination of test supermartingales
+is a test supermartingale, so $W^{(h)}_K=\frac1m\sum_j\prod_{k\le K}(1+\lambda^{(j)}(Z_k-\eps_h))$ is valid, parameter-free,
+and adapts to an unknown margin at a cost of $\log m$ in the log-wealth. Section~\ref{sec:exp-abl} compares it with a fixed bet and a
+plug-in bet.
+
+\subsection{Multi-step validity: why chains, and why they cannot be pooled}\label{sec:overlap}
+
+If a horizon-$h$ prediction is formed at \emph{every} round, consecutive residuals share the innovations in
+a window of length $h-1$, so the residual stream is moving-average of order $h-1$. Conditioning on the past
+reveals part of the current residual and \eqref{eq:null-mean} fails in general even for a faithful
+model. The same effect underlies the overlap problem in sequential multi-step forecast evaluation
+\citep{henzi2022correction}. We restore \eqref{eq:null-mean} by running each horizon on
+\emph{non-overlapping chains} of issue times $c,c+h,c+2h,\dots$: the $k$-th chain element is resolved before the next
+is issued, so $\Fcal_{k-1}$ contains everything the next residual could depend on. The cost is real: horizon $h$ receives a factor $h$ fewer
+updates.
+
+One might try to win these updates back by running all $h$ offset chains and rejecting when
+any crosses its threshold (a union bound, costing $\log h$). That is valid but it does not pool
+evidence: each chain sees only a $1/h$ share of the data and its wealth grows at the same rate per update
+as the single chain, so taking the first of $h$ crossings buys at most a small order-statistic
+gain that the $\log h$ in the threshold cancels. Averaging the chains' wealth would pool, but
+chains live on different filtrations, so the average is an e-value at fixed times and not an e-process (an
+optional-stopping argument does not go through). Section~\ref{sec:exp-horizon} measures the
+interleaved union: it is valid and no faster than the single chain. We therefore keep the simple estimator
+and treat the factor $h$ as the intrinsic price of certifying long horizons directly.
+
+\subsection{Two outputs: the revocation frontier and the certified horizon}\label{sec:frontier}
+
+\paragraph{Revocation frontier (monitor).} Run one e-process per horizon at level $\alpha/H$ and revoke horizon $h$ at
+$\tau_h=\inf\{k:W^{(h)}_k\ge H/\alpha\}$, permanently (Ville concerns the event of \emph{ever} crossing). Define
+\begin{equation}\label{eq:hstar}
+\hstar(t)\defeq\max\{h:\ \text{no horizon }h'\le h\text{ is revoked by round }t\},
+\end{equation}
+with $\hstar=0$ if horizon one is revoked. The prefix rule encodes that a broken short horizon casts
+doubt on longer ones, and matches the use as a depth clip. The guarantee (Theorem~\ref{thm:validity}) is
+\emph{no false revocation}: a faithful horizon is lost with probability at most $\alpha$.
+
+\paragraph{Certified horizon (certificate).} In estimation mode the same machinery gives a
+time-uniform upper bound $U^{(h)}_t$ on the running average of conditional means of horizon $h$ (Lemma~\ref{lem:cs}),
+hence, for a certifiable statistic, an upper bound on the average divergence and, through the modulus, on total
+variation: $\widehat{\TV}_h(t)\defeq\min\{1,\phi(cU^{(h)}_t+\bar\rho)\}$. For a budget $\tau$ the certified horizon is
+\begin{equation}\label{eq:hcert}
+\hcert_\tau(t)\defeq\max\{h:\ \widehat{\TV}_i(t)\le\tau\ \text{for all }i\le h\}.
+\end{equation}
+The guarantee (Theorem~\ref{thm:cert}) is the opposite error: with probability at least $1-\alpha$, simultaneously
+over rounds and horizons, the true average discrepancy of every horizon inside $\hcert_\tau(t)$ is at most $\tau$.
+The planner's gate is $\min(\hstar(t),\hcert_\tau(t))$. The two do not substitute for each other: $\hstar$ can
+be high on a model that is mediocre but stable, and $\hcert_\tau$ can be low on a faithful model that has not yet
+accumulated enough evidence.
+
+\paragraph{Change detection.} To detect a change in faithfulness rather than test a fixed null we use the
+Shiryaev--Roberts e-detector \citep{shin2024edetectors}, $R_t=(1+R_{t-1})e_t$ (with the mixture bet), which accumulates
+evidence over all candidate changepoints so that wealth lost before the change cannot delay the alarm. Algorithm~\ref{alg:atlas} summarizes the procedure.
+
+\begin{algorithm}[t]
+\caption{ATLAS: monitoring and certification of a deployed world model}\label{alg:atlas}
+\begin{algorithmic}[1]
+\State \textbf{input:} horizons $\{1,\dots,H\}$, tolerances $\{\eps_h\}$, level $\alpha$, bet grid $\{\lambda^{(j)}\}$, budget $\tau$, constants $(c,\bar\rho)$
+\State initialize wealth $W^{(h)}\gets1$, $\texttt{revoked}(h)\gets\text{false}$, and a confidence sequence $\mathrm{CS}^{(h)}$ for each $h$
+\For{each round $t=1,2,\dots$}
+  \For{each horizon $h$ whose chain element resolves at $t$}
+    \State form the bounded statistic $Z$; update $W^{(h)}\gets\sum_j\tfrac1m\Pi_j(1+\lambda^{(j)}(Z-\eps_h))$ and $\mathrm{CS}^{(h)}$
+    \If{$W^{(h)}\ge H/\alpha$} \State $\texttt{revoked}(h)\gets\text{true}$ \EndIf
+  \EndFor
+  \State $\hstar(t)\gets$ largest prefix with no revoked horizon; $\hcert_\tau(t)\gets$ largest prefix with $\widehat{\TV}_i\le\tau$
+  \State \textbf{output} the gate $\min(\hstar(t),\hcert_\tau(t))$
+\EndFor
+\end{algorithmic}
+\end{algorithm}

@@ -1,0 +1,35 @@
+\section{Proof of Theorem~\ref{thm:delay}}\label{app:delay}
+
+\paragraph{(a) Average run length.} Each component detector $R^{(j)}_t=(1+R^{(j)}_{t-1})e^{(j)}_t$ satisfies $\E[R^{(j)}_t\mid\Fcal_{t-1}]\le1+R^{(j)}_{t-1}$ under the null,
+so the mixture $R_t=\sum_j\nu_jR^{(j)}_t$ does too, and $R_t-t$ is a supermartingale. Optional stopping at $T\wedge n$ gives $\E[R_{T\wedge n}]\le\E[T\wedge n]$. Since $R_{T\wedge n}\ge\frac1\alpha\mathbf 1\{T\le n\}$,
+$\PR(T\le n)/\alpha\le\E[T]$. Letting $n\to\infty$, either $\PR(T<\infty)<1$ and $\E_\infty[T]=\infty$, or $\E_\infty[T]\ge1/\alpha$.
+
+\paragraph{(b) Delay.} Condition on $\Fcal_\tau$. For every $j$, $R^{(j)}_{\tau+n}\ge\prod_{k=\tau+1}^{\tau+n}e^{(j)}_k$ because the
+recursion contains the term started at $\tau{+}1$ with weight one, so $R_{\tau+n}\ge\nu_j\prod_{k=\tau+1}^{\tau+n}e^{(j)}_k$ with $\nu_j=1/m$.
+
+Take $\lambda\le\lambda^\star=\min\{\Delta/(2v),1/(2B')\}$ on the grid, so $\lambda|X_k|\le\frac12$ and $\log(1+x)\ge x-x^2$ for $x\ge-\frac12$ gives
+$\log e_k\ge Y_k\defeq\lambda X_k-\lambda^2X_k^2$. Then $\E[Y_k\mid\Fcal_{k-1}]\ge\lambda\Delta-\lambda^2v\ge\lambda\Delta/2$ since $\lambda v\le\Delta/2$.
+Let $D_k=Y_k-\E[Y_k\mid\Fcal_{k-1}]$. Because $|Y_k|\le\lambda B'+\lambda^2B'^2\le1.5\lambda B'$, $|D_k|\le3\lambda B'$. Because $Y_k^2\le2\lambda^2X_k^2(1+\lambda^2X_k^2)\le2.5\lambda^2X_k^2$,
+$\mathrm{Var}(D_k\mid\Fcal_{k-1})\le2.5\lambda^2v$. Freedman's inequality \citep{freedman1975tail} for the lower tail with $s=n\lambda\Delta/4$ gives
+\[
+\PR\Big(\sum_{k=\tau+1}^{\tau+n}D_k\le-s\ \Big|\ \Fcal_\tau\Big)\le\exp\Big(-\frac{s^2}{2(2.5n\lambda^2v+3\lambda B's/3)}\Big)=\exp\Big(-\frac{n\Delta^2}{80v+8B'\Delta}\Big).
+\]
+This is at most $\delta$ when $n\ge(80v+8B'\Delta)\log(1/\delta)/\Delta^2$. On the complement, $\sum_kY_k\ge n\lambda\Delta/2-n\lambda\Delta/4=n\lambda\Delta/4$.
+
+The linear grid contains $\lambda_j=j/(mB')\in(\lambda^\star/2,\lambda^\star]$ with $j=\lfloor\lambda^\star mB'\rfloor\ge1$, which holds because $\lambda^\star\ge1/(mB')$ under $\Delta\ge2v/(mB')$ and $m\ge2$.
+With $\lambda=\lambda_j$, on the good event $\log R_{\tau+n}\ge n\lambda_j\Delta/4-\log m\ge n\lambda^\star\Delta/8-\log m$, which is at least $\log(1/\alpha)$ when $n\ge8\log(m/\alpha)/(\lambda^\star\Delta)$. Hence $T\le\tau+n$.
+
+\paragraph{(c)} Horizon $h$ updates once per $h$ rounds on a chain; apply (b) to the chain with its margin and second moment, and add at most $h$ rounds for the position of the changepoint within a chain step. \hfill$\square$
+
+\section{Experimental details}\label{app:details}
+
+\paragraph{Simulator.} Linear-Gaussian latent system $z_{t+1}=Az_t+Ba_t+w_t$, $w_t\sim\mathcal N(0,0.1\,I_4)$, spectral radius of $A$ equal to $0.9$, exogenous exploration actions $a_t\sim\mathcal N(0,0.3^2I)$,
+fixed unit drift direction $u$. The model uses the pre-change parameters, so it is exactly faithful until an unmodelled force $f u$ is added to the true update. The statistic is
+$Z=\frac1d(y-\mu)^\top\Sigma_h^{-1}(y-\mu)-1$ clipped to $[-1,6]$ with the exact $h$-step predictive covariance $\Sigma_h=\sum_{i<h}A^iQ(A^i)^\top$.
+
+\paragraph{Closed-loop simulator.} Same dynamics with state-dependent noise $q(z)=q_0(1+\beta\|z\|^2/(\|z\|^2+d))$, $q_0=0.1$, $\beta=4$, a fully actuated $B=0.8\,Q_{\mathrm{orth}}$, and certainty-equivalent one-step model-predictive control through the model
+(\texttt{atlas/closedloop.py}); actions are clipped to $\pm2$ with exploration noise $0.05$.
+
+\paragraph{Bets and thresholds.} Mixture over $m=20$ equally spaced $\lambda$ on $(0,1/(z_{\mathrm{hi}}-z_{\mathrm{lo}})]$; level $\alpha=0.05$, per-horizon level $\alpha/H$.
+
+\paragraph{Reproduction.} All simulator experiments run on CPU in minutes (\texttt{experiments/}, results in \texttt{results/}); the real-video replication needs the public Moving MNIST and KTH files.

@@ -48,65 +48,50 @@ sketches.
 ## Repository layout
 
 ```
-docs/                   Theory: problem setup, e-process construction, the 3 theorems
+docs/                   Theory notes (earlier drafts; the paper supersedes them)
 atlas/                  Reference implementation
   scores.py             Proper scoring rules (energy, CRPS, Gaussian NLL, Mahalanobis)
-  eprocess.py           Mixture-betting e-process, betting confidence sequence, e-detector
-  frontier.py           Horizon-indexed e-processes, faithfulness frontier h*(t)
-  simulator.py          Controllable linear-Gaussian latent world model (drift injection)
+  eprocess.py           Mixture-betting e-process, betting CS (constant mean), e-detector
+  cs.py                 Confidence sequence for the running average of conditional means,
+                        and its windowed form (the certificate)
+  frontier.py           Horizon-indexed e-processes, revocation frontier h*(t)
+  simulator.py          Linear-Gaussian latent world model (drift injection)
+  closedloop.py         Closed-loop world model with state-dependent noise and planners
+  fastsim.py            Vectorised multi-horizon streams and e-process paths
 experiments/
-  exp1_validity.py      Theorem 1 — uniform validity (no false revocation)
-  exp2_frontier.py      Frontier collapse + anytime-valid simulation lemma (Theorem 2)
-  exp3_delay.py         Theorem 3 — detection delay ~ (log 1/alpha + log m)/D*
-  real_data/            ATLAS on real image-sequence datasets (Moving MNIST, KTH)
-tests/                  Ville false-alarm control, CS coverage, power, proper scores
-results/                Synthetic-study figures + summary
-figures/                Real-data figures (sample frames + frontier collapse)
+  exp1_validity.py      Uniform validity (no false revocation)
+  exp2_frontier.py      Frontier collapse and the windowed certified gap
+  exp3_delay.py         Detection delay vs (log 1/alpha + log m)/D*
+  exp4_baselines.py     Competitor monitors on the simulator
+  exp5_horizon_delay.py Horizon-resolved delay law; interleaving negative result
+  exp6_endogeneity.py   Closed-loop planners: validity and power vs competitors
+  exp7_ablations.py     Bet, tolerance, drift shape, statistic, noise tails
+  exp8_real_replication.py  Replicated real-video study (30 splits) with competitors
+  exp9_simlemma.py      Certified total-variation bound vs closed-form truth
+  real_data/            Moving MNIST / KTH loaders and the PCA+linear world model
+  gpu/                  Neural world-model monitors (single illustrative runs)
+tests/                  Ville control, CS coverage (time-varying means), power, scores
+results/                JSON outputs and figures of the simulator experiments
+paper/                  Manuscript (TMLR format) and tables
 ```
 
-## Results
+## Results (see paper/ for the full account)
 
-- **Synthetic ground-truth study** (`results/`): all three theorems validated —
-  false-revocation 0.0025 ≤ α; `h*(t)` collapses 38→7 at a drift while an offline
-  metric stays blind; detection delay matches `(log 1/α + log m)/D*` to ~6%. Run:
-  `python -m experiments.run_all`.
-- **Real-world data** (`figures/`): ATLAS monitors a learned latent world model on
-  three real shifts — **Moving MNIST** (native → 2× speed), **KTH Actions**
-  walking → running (gait dynamics), and KTH outdoor → indoor (domain/appearance);
-  `h*(t)` collapses when the real shift opens (fully for dynamics, partially for the
-  subtle domain shift). Run: `python -m experiments.real_data.download && python -m
-  experiments.real_data.exp_mnist`.
-- **Neural world models on GPU** (`experiments/gpu/`, run on a real Colab T4 via the
-  official `google-colab-cli`): the same ATLAS frontier monitoring *learned* world
-  models behind an identical interface — a conv-autoencoder WM on Moving MNIST
-  (`figures/neural_mnist_gpu.png`, `h*` 3→0 at the speed shift) and a **JEPA-style**
-  WM (frozen ResNet encoder + latent dynamics) on KTH walking→running
-  (`figures/neural_kth_jepa_gpu.png`, valid walking null → `h*` collapse to 0). Run:
-  `python -m experiments.gpu.run_neural --dataset kth --model jepa`. See
-  `experiments/gpu/README.md`.
+- **Simulator with ground truth.** No false revocation; measured delay matches the
+  horizon-resolved prediction within 16%; the certified TV bound is never violated.
+- **Closed-loop endogeneity.** On a stream steered by a model-based planner, raw-error
+  monitors calibrated on exogenous data inflate false alarms (CUSUM and a conformal
+  martingale reach 1.00 when the planner seeks high-noise states); ATLAS stays at or
+  below 0.013. Power depends on where the planner steers.
+- **Real video, replicated.** Moving MNIST speed shift and two KTH shifts over 30 random
+  splits against CUSUM, ADWIN, KSWIN and a conformal martingale. ATLAS detects every
+  shift; false-alarm control needs a tolerance margin (`k >= 0.25-1` standard deviations).
+- **Negative results.** Pooling overlapping horizon chains does not recover the discarded
+  data; a constant tolerance calibrated on pooled data voids the conditional guarantee.
 
-## Planned experiments (GPU phase)
-
-- **DreamerV3** on DMC / Atari with an injected mid-deployment dynamics shift
-  (mass/friction perturbation): show $h^\*(t)$ collapsing exactly when the gap opens
-  while FVD / offline metrics stay blind.
-- A **JEPA-style latent model**, scored purely in latent space (no decoding). The
-  PCA+linear latent WM in `experiments/real_data/latent_wm.py` is the CPU stand-in;
-  a Dreamer/JEPA model drops in behind the identical interface.
-- An **LLM-agent "textual world model"** setting (connects to the SENTRY line of work).
-
-## Roadmap / status
-
-| Phase | Deliverable | Status |
-|-------|-------------|--------|
-| 0 | Formal problem setup + three theorem statements | **done** |
-| 3 | `atlas/` reference implementation (e-process, frontier, scores) | **done** |
-| 4a | Synthetic ground-truth validation of Theorems 1–3 | **done** |
-| 4b | Real-data experiments (Moving MNIST, KTH Actions) | **done** |
-| 1 | Verified literature sweep → `references.bib`, rewrite `04_related_work.md` | next |
-| 2 | Full proofs | pending |
-| 4c | DreamerV3 / JEPA / LLM-WM experiments (GPU) | pending |
-| 5 | Paper draft (target: ICLR 2027 World-Model Workshop → main track / AISTATS 2027 / TMLR) | pending |
+Run the simulator suite with `python -m experiments.run_all` and the others with
+`python -m experiments.expN_...`; the real-video study needs
+`python -m experiments.real_data.download`.
 
 ## Positioning
 

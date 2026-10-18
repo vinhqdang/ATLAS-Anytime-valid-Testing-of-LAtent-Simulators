@@ -1,0 +1,112 @@
+\section{Introduction}\label{sec:intro}
+
+A model-based agent imagines several futures, dozens of steps deep, at every decision, and acts on
+the one that looks best. That is sensible while the world model matches the environment. Then a
+joint wears, friction changes, a payload shifts, or the agent's own improving policy carries it into
+states the model never saw. The imagined futures stay confident, nothing in the monitoring stack
+fires, because the only number anyone computed was an offline score on held-out data before
+deployment, and the failure is found by its consequences.
+
+Two properties make the faithfulness of a world model awkward to certify. It \emph{decays with the
+horizon}: a rollout applies the model recursively, so a small one-step error compounds, and a model
+that is nearly perfect one step ahead can be useless twenty steps ahead. Faithfulness is therefore a
+profile over horizons rather than a scalar. It also \emph{drifts over deployment time}, through
+non-stationarity, the sim-to-real gap, and the feedback loop of model-based reinforcement learning,
+where the policy generating the data is optimized through the model under test. The data stream
+is then \emph{endogenous}: it depends on the object being audited.
+
+Current practice scores world models with Fr\'echet Video Distance \citep{unterthiner2018fvd},
+reconstruction error, or return gaps, all computed once on a fixed set. Conformal prediction
+\citep{vovk2005algorithmic} and its online variants \citep{gibbs2021adaptive,gibbs2024conformal}
+are the usual tools for distribution-free uncertainty, but they target marginal coverage of a single
+prediction. Classical change detectors (CUSUM, Page--Hinkley, windowed tests) control an average run
+length, so their false-alarm probability grows with monitoring time. What is wanted instead is a
+running statement, ``at round $t$, rollouts of this model are trustworthy up to horizon $h$ at
+tolerance $\eps$,'' whose error probability is controlled uniformly over all rounds, resolved by
+horizon, indifferent to whether the model predicts pixels or embeddings, and sound when the planner
+steers the data.
+
+\paragraph{Approach.}
+We build this from the testing-by-betting machinery of anytime-valid inference
+\citep{shafer2021testing,ramdas2023savi,waudbysmith2024betting}. At each round the model emits, for
+each horizon, an action-conditioned predictive distribution; reality later reveals the outcome. A
+strictly proper score \citep{gneiting2007strictly} turns the pair into a bounded statistic. For each
+horizon a test martingale bets against the null that the horizon is $\eps$-faithful, which is a
+\emph{conditional-mean} null, one constraint given the whole past; that is why no exchangeability
+or independence is needed and why the construction survives policy endogeneity. The same
+betting machinery, run as a confidence sequence, bounds the faithfulness gap from above. These two
+outputs answer different questions and control different errors:
+
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+\item the \emph{revocation frontier} $\hstar(t)$, the largest horizon whose e-processes have not
+yet crossed $1/\alpha$, is a monitor: a faithful horizon is revoked with probability at most
+$\alpha$ over all time (an error of availability);
+\item the \emph{certified horizon} $\hcert_\tau(t)$, the largest horizon whose confidence-sequence
+bound on total variation is below a budget $\tau$, is a certificate: with probability at least
+$1-\alpha$, no horizon the planner is allowed to use ever has true discrepancy above $\tau$ (an error
+of safety).
+\end{itemize}
+
+A planner that clips its imagination depth to $\min(\hstar,\hcert_\tau)$ inherits both guarantees.
+The two must not be conflated: a bound on false revocations says nothing about trusting an
+unfaithful horizon.
+
+\paragraph{What is and is not new.}
+Betting e-processes and confidence sequences are not new, and neither is sequential forecast
+evaluation with e-values (Section~\ref{sec:related}). We do not claim a new inference principle. The
+contributions are the problem formalization for deployed world models, the analysis of what breaks
+when the target is multi-step, and a body of evidence about when the construction works and when it
+does not:
+
+\begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
+\item \textbf{Formalization and multi-step validity} (Sections~\ref{sec:setup}--\ref{sec:method}).
+A horizon-indexed, conditional-mean faithfulness null with a tolerance, a statistic whose
+conditional mean is the object of interest, and an analysis of why consecutive $h$-step residuals
+cannot be bet on directly. We validate on non-overlapping chains and show, as a negative result, that the
+obvious attempt to recover the discarded data by pooling offset chains does not help.
+\item \textbf{Two dual guarantees} (Section~\ref{sec:theory}): time-uniform false-revocation control;
+a confidence sequence for the running average of \emph{conditional} means (the constant-mean
+construction does not certify it); a windowed variant; and a per-horizon total-variation
+certificate with a simulation-lemma-style value-gap consequence.
+\item \textbf{A finite-sample delay bound} replacing the asymptotic statement, with a
+horizon-resolved growth rate that predicts measured delay across horizons.
+\item \textbf{Evidence} (Section~\ref{sec:experiments}): ground-truth validation including the delay
+law and the certificate; a closed-loop study where the planner steers the stream; a replicated
+real-video study with competitor monitors on identical streams; and ablations that include the
+cases where design choices fail.
+\end{enumerate}
+
+\subsection{Related work}\label{sec:related}
+
+\emph{Anytime-valid inference and betting.} Ville's inequality \citep{ville1939}, game-theoretic
+probability and e-values \citep{shafer2019game,vovk2021evalues,ramdas2023savi}, safe testing
+\citep{gruenwald2024safe}, and betting confidence sequences \citep{waudbysmith2024betting,
+howard2021timeuniform} supply our tools. Betting has been applied to two-sample testing
+\citep{shekhar2023nonparametric}, to auditing fairness of a deployed classifier
+\citep{chugg2023auditing}, and to tracking the risk of a deployed model under shift
+\citep{podkopaev2022tracking}.
+
+\emph{Sequential forecast evaluation.} The closest prior work evaluates probabilistic forecasts
+sequentially with e-values: calibration tests for probability forecasts \citep{arnold2023sequentially},
+comparison of forecasters \citep{henzi2022valid,choe2024comparing}. These establish that
+time-uniform inference on forecast scores is possible, and one of them has direct bearing on our
+setting: a correction to \citet{henzi2022valid} withdraws a supermartingale property for horizons
+above one, the same overlap phenomenon that we analyze in Section~\ref{sec:overlap}. They address
+calibration or relative performance of a forecaster at a fixed lead time. We instead test an
+absolute tolerance null at every horizon of an action-conditioned simulator, certify the gap from
+above, and study streams in which the actions depend on the model.
+
+\emph{Conformal prediction and change detection.} Conformal test martingales
+\citep{vovk2003testing} monitor exchangeability, and online conformal methods
+\citep{gibbs2021adaptive,gibbs2024conformal,tibshirani2019covariate} relax it for coverage.
+Change detectors based on cumulative sums, Page--Hinkley, windowing, and Bayesian run-length
+posteriors \citep{page1954cusum,bifet2007adwin,raab2020kswin,adams2007bocpd} are tuned to an average
+run length, and the e-detector framework \citep{shin2024edetectors} makes the false-alarm guarantee
+nonparametric. We compare against all of these in Section~\ref{sec:exp-baselines}.
+
+\emph{World models and the simulation lemma.} World models range from latent-imagination agents
+\citep{ha2018worldmodels,hafner2023dreamerv3} and joint-embedding predictive architectures
+\citep{assran2023ijepa,bardes2024vjepa,assran2025vjepa2} to interactive and physical-AI simulators
+\citep{bruce2024genie,nvidia2025cosmos}. Their evaluation is offline. The simulation lemma
+\citep{kearns2002near,janner2019mbpo,lobel2024tightness} turns one-step model error into a value
+gap, with a known one-step error. We replace the known error by a time-uniform certified bound.

@@ -1,0 +1,73 @@
+\section{Problem formulation}\label{sec:setup}
+
+\subsection{Deployment protocol}
+
+A world model $M$ is deployed online with a planner $\pi$. At round $t$ the agent is in a (possibly
+latent) state $x_t$ and the planner chooses actions $a_{t:t+H-1}$ up to a maximum horizon $H$, using
+$M$ for imagined rollouts. For each horizon $h\le H$ the model produces an action-conditioned
+predictive distribution
+\begin{equation}
+P^M_{t,h}\defeq P^M\!\big(\,\cdot\mid x_t,\,a_{t:t+h-1}\big)\in\Delta(\Ycal)
+\end{equation}
+over a target space $\Ycal$ (observations, states, or a learned embedding). Reality reveals the
+$h$-step outcome $Y^{(h)}_t$ at time $t{+}h$. Let $\Fcal_k$ be the deployment filtration: everything
+observable up to the resolution of the $k$-th prediction of the horizon under consideration, including
+states, actions, planner internals, and previous outcomes. We assume nothing about independence or
+exchangeability of the stream. A variable is \emph{predictable} if it is $\Fcal_{k-1}$-measurable.
+
+\subsection{Scores, divergence, and the faithfulness null}
+
+Fix a strictly proper, negatively oriented score $S$ \citep{gneiting2007strictly} and write
+$\dS(Q,P)=\E_{Y\sim Q}[S(P,Y)]-\E_{Y\sim Q}[S(Q,Y)]\ge0$ for its divergence, which vanishes iff
+$P=Q$. For the log score $\dS=\mathrm{KL}$ and Pinsker gives $\TV\le\sqrt{\dS/2}$; for the energy
+score $\dS$ is a squared energy distance; for a Gaussian predictive the standardized squared error
+$(y-\mu)^\top\Sigma^{-1}(y-\mu)$ is $\chi^2_d$ under calibration, which lets ATLAS score a predicted
+\emph{embedding} against the realized embedding without decoding to pixels. We assume a modulus: there is a
+nondecreasing concave $\phi$ and a probability metric $\rho$ with $\rho(Q,P)\le\phi(\dS(Q,P))$.
+
+Let $Q_{s,h}=\mathrm{Law}(Y^{(h)}_s\mid\Fcal_s)$ be the true conditional law.
+
+\begin{definition}[$\eps$-faithfulness]\label{def:faithful}
+Horizon $h$ is $\eps_h$-faithful if $\dS(Q_{s,h},P^M_{s,h})\le\eps_h$ for every issue time $s$.
+\end{definition}
+
+We operationalize it through a bounded per-round statistic $Z_k\in[z_{\mathrm{lo}},z_{\mathrm{hi}}]$
+for each horizon, issued at $s_k$ and resolved at $s_k{+}h$, whose conditional mean $\mu_k\defeq
+\E[Z_k\mid\Fcal_{k-1}]$ is tied to the divergence in two directions.
+
+\begin{definition}[Calibrated and certifiable statistics]\label{def:cert}
+The statistic is \emph{calibrated at tolerance $\eps_h$} if
+$\dS(Q_{s_k,h},P^M_{s_k,h})\le\eps_h$ implies $\mu_k\le\eps_h$ (used for the \emph{test}). It is
+\emph{certifiable with constants $(c,\bar\rho)$} if $\dS(Q_{s_k,h},P^M_{s_k,h})\le c\,\mu_k+\bar\rho$ almost
+surely (used for the \emph{certificate}). Both are statements about the clipped statistic that is
+actually computed.
+\end{definition}
+
+\begin{example}[Reference score excess]\label{ex:ref}
+With a predictable reference $R_k$ and $Z_k=S(P^M_{s_k,h},Y)-S(R_k,Y)$ we have $\mu_k=\dS(Q,P^M)-\dS(Q,R_k)$.
+It is calibrated at every $\eps_h$ since $\dS(Q,R_k)\ge0$, and certifiable with $c=1$ and
+$\bar\rho\ge\sup\dS(Q,R_k)$, the suboptimality of the reference. A poor reference makes the test
+conservative and the certificate loose.
+\end{example}
+
+\begin{example}[Standardized Gaussian excess]\label{ex:gauss}
+For a Gaussian predictive $\mathcal N(\mu_M,\Sigma_M)$ take
+$Z_k=\frac1d(y-\mu_M)^\top\Sigma_M^{-1}(y-\mu_M)-1$, clipped to $[-1,z_{\mathrm{hi}}]$. If the true
+conditional law has the same covariance and differs in mean by $m$, then $\mu_k=\frac1d m^\top\Sigma_M^{-1}m$
+and $\dS=\mathrm{KL}=\tfrac d2\mu_k$, so $c=d/2$, $\bar\rho=0$, and $\mu_k=0$ exactly under calibration.
+The conditional mean is \emph{pivotal}: it does not depend on the state or the action. If the covariance
+is mismatched, only the one-directional calibration property is retained.
+\end{example}
+
+\subsection{The endogeneity obstruction}\label{sec:endo}
+
+The outcomes $\{Y^{(h)}_t\}$ are neither independent nor exchangeable, and the planner is optimized
+through $M$, so the state distribution that the monitor sees is a function of the model. Two things
+follow. A reference or threshold calibrated offline, on data the planner did not generate, describes
+a different distribution from the one met in deployment (Section~\ref{sec:exp-endo} measures how
+much that matters). And a fixed constant tolerance is only meaningful if the statistic's conditional
+mean does not itself depend on where the planner goes. A conditional-mean null constrains one
+expectation given the entire past, so it holds for any predictable planner and betting rule; it
+needs no model of how the planner behaves. What it does not do is guarantee power: a planner may
+drift to states where the same error is hard to detect, which we quantify in
+Section~\ref{sec:exp-endo}.

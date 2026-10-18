@@ -1,0 +1,118 @@
+\section{Theory}\label{sec:theory}
+
+Throughout, statistics are bounded, $Z_k\in[z_{\mathrm{lo}},z_{\mathrm{hi}}]$ with width $w\defeq z_{\mathrm{hi}}-z_{\mathrm{lo}}$, and bets and references are predictable. No independence or exchangeability is assumed.
+
+\subsection{No false revocation}
+
+\begin{theorem}[Uniform validity]\label{thm:validity}
+Fix $\alpha\in(0,1)$. If horizon $h$ satisfies \eqref{eq:null-mean}, then $\PR(\exists K:\ W^{(h)}_K\ge1/\alpha)\le\alpha$,
+uniformly over all predictable planners and betting rules. Running the $H$ horizons at level $\alpha/H$ each gives
+$\PR(\exists t,\ \exists h\in\Hcal_0:\ h\text{ revoked by round }t)\le\alpha$ for the set $\Hcal_0$ of faithful horizons.
+\end{theorem}
+\begin{proof}
+By Proposition~\ref{prop:evar} and linearity, $W^{(h)}$ is a nonnegative supermartingale with $W^{(h)}_0=1$ under the
+null, using only \eqref{eq:null-mean} and predictability. Ville's inequality bounds $\PR(\sup_KW^{(h)}_K\ge H/\alpha)\le\alpha/H$ for each horizon, and a union
+bound over $|\Hcal_0|\le H$ horizons gives the simultaneous statement.
+\end{proof}
+
+The guarantee is conservative: under the null the wealth is a supermartingale that tends to drift down, so empirical rates
+sit far below $\alpha$ (Section~\ref{sec:exp-synth}). It controls false \emph{revocations}; it says nothing about trusting an
+unfaithful horizon, which is the job of the certificate below.
+
+\subsection{A confidence sequence for the average conditional mean}
+
+The simulation-lemma-style bound needs the running average $m_K=\frac1K\sum_{k\le K}\mu_k$ of the \emph{conditional} means, which vary
+over the deployment. A betting confidence sequence for a \emph{constant} mean does not certify it: its proof tests
+$\E[Z_k\mid\Fcal_{k-1}]\ge u$ for every $k$, which is not implied by an average bound. We use an
+empirical-Bernstein supermartingale instead.
+
+\begin{lemma}[Confidence sequence for the average conditional mean]\label{lem:cs}
+Let $\widehat Z_k\in[z_{\mathrm{lo}},z_{\mathrm{hi}}]$ be predictable, $\psi(\lambda)=-\log(1-\lambda)-\lambda$,
+$V_K=\sum_{k\le K}\big((Z_k-\widehat Z_k)/w\big)^2$, and fix a grid $\lambda_1,\dots,\lambda_n\in(0,1)$ with
+prior weights $\nu_j$. With probability at least $1-\alpha$, simultaneously for all $K\ge1$ and all $j$,
+\begin{equation}\label{eq:cs}
+m_K\ \le\ U_K\defeq\bar Z_K+\frac{w}{\lambda_jK}\Big(\psi(\lambda_j)V_K+\log\frac1{\alpha\nu_j}\Big),
+\end{equation}
+so the minimum over $j$ is a valid upper confidence sequence. The width is of the empirical-Bernstein order
+$\sqrt{\hat\sigma_K^2\log(1/\alpha)/K}+w\log(1/\alpha)/K$.
+\end{lemma}
+\begin{proof}
+Rescale to $[0,1]$. For $y\ge-1$ and $\lambda\in[0,1)$, $\exp(\lambda y-\psi(\lambda)y^2)\le1+\lambda y$
+\citep{fan2015exponential}. Put $y=\widehat x_k-x_k\in[-1,1]$. Then
+$\E[\exp(\lambda(\mu_k-x_k)-\psi(\lambda)(x_k-\widehat x_k)^2)\mid\Fcal_{k-1}]\le e^{\lambda(\mu_k-\widehat x_k)}(1+\lambda(\widehat x_k-\mu_k))\le1$,
+for \emph{any} value of the conditional mean $\mu_k$. So $M_K(\lambda)=\exp(\lambda\sum_k(\mu_k-x_k)-\psi(\lambda)V_K)$ is a nonnegative supermartingale, and so is
+$\sum_j\nu_jM_K(\lambda_j)$. Since $\nu_jM_K(\lambda_j)$ is dominated by the mixture, Ville's inequality gives
+$\PR(\exists K,j:\ \nu_jM_K(\lambda_j)\ge1/\alpha)\le\alpha$; rearranging gives \eqref{eq:cs}.
+\end{proof}
+
+\begin{corollary}[Windows]\label{cor:window}
+Restart the sequence at block starts $s_i=ib$ and give start $s_i$ the level $\alpha/((i+1)(i+2))$. Then with probability at least $1-\alpha$, simultaneously
+for all starts and all end times, the average conditional mean over $(s_i,t]$ is at most the corresponding bound.
+Reading the window with the latest start $s_i\le t-w_0$ gives an anytime-valid bound on the \emph{recent} average over a window of length in $[w_0,w_0+b)$.
+\end{corollary}
+\begin{proof}
+Apply Lemma~\ref{lem:cs} at each start with level $\alpha_i=\alpha/((i+1)(i+2))$ and use $\sum_i\alpha_i\le\alpha$.
+\end{proof}
+
+The windowed form matters: the full-history average moves slowly after a change, so a certificate meant to follow the
+present must be read over a window; the price is the larger $\log(1/\alpha_i)\approx2\log i$ term.
+
+\subsection{The certified horizon and a simulation-lemma consequence}
+
+\begin{theorem}[Anytime-valid certified horizon]\label{thm:cert}
+Suppose each horizon's statistic is certifiable with constants $(c,\bar\rho)$ (Definition~\ref{def:cert}) and
+$\rho=\TV$ with modulus $\phi$. Apply Lemma~\ref{lem:cs} (or Corollary~\ref{cor:window}) to the chain of each horizon
+$h\le H$ at level $\alpha/H$, giving bounds $U^{(h)}_t$ for the average over a chain index set $\mathcal S_{h,t}$ (full history or a window).
+Then with probability at least $1-\alpha$, simultaneously for all rounds $t$ and horizons $h\le H$,
+\begin{equation}\label{eq:certtv}
+\frac1{|\mathcal S_{h,t}|}\sum_{k\in\mathcal S_{h,t}}\TV\big(Q_{s_k,h},P^M_{s_k,h}\big)\ \le\ \min\big\{1,\ \phi\big(cU^{(h)}_t+\bar\rho\big)\big\}.
+\end{equation}
+Consequently, with probability at least $1-\alpha$, for all $t$ and all $h\le\hcert_\tau(t)$ the left side is at most $\tau$.
+\end{theorem}
+\begin{proof}
+By certifiability the average divergence over $\mathcal S_{h,t}$ is at most $c\,m+\bar\rho$ with $m$ the average conditional mean, which Lemma~\ref{lem:cs} bounds by
+$U^{(h)}_t$ for all $t,h$ with probability $1-\alpha$ after a union bound over $H$ horizons. By the modulus, concavity of $\phi$ (Jensen) and monotonicity,
+the average of $\TV\le\phi(\dS)$ is at most $\phi(c\,m+\bar\rho)\le\phi(cU^{(h)}_t+\bar\rho)$; total variation is at most one.
+\end{proof}
+
+\begin{corollary}[Value gap]\label{cor:value}
+Let rewards $r\in[0,R_{\max}]$ be a function of the outcome and let actions be held fixed (open-loop), as in the action-conditioned predictive. For discount weights $w_i\ge0$, on the event of Theorem~\ref{thm:cert}
+the weighted sum of window-averaged per-step reward gaps satisfies
+$\sum_{i\le h}w_i\,G_i(t)\le R_{\max}\sum_{i\le h}w_i\min\{1,\phi(cU^{(i)}_t+\bar\rho)\}$, where $G_i(t)$ is the average of $|\E_M r(Y^{(i)})-\E_Q r(Y^{(i)})|$ over horizon $i$'s chain index set.
+\end{corollary}
+\begin{proof}
+For fixed actions $|\E_Pr-\E_Qr|\le R_{\max}\TV(P,Q)$; apply \eqref{eq:certtv} for each $i$.
+\end{proof}
+
+\begin{remark}[Relation to the classical simulation lemma]
+The classical lemma \citep{kearns2002near} converts a \emph{known} one-step error into an $h$-step value gap, paying a compounding factor such as $\gamma/(1-\gamma)^2$.
+Here each horizon's own chain is certified, so there is no propagation step and no concentrability coefficient; the price is that horizon $h$ is certified from a $1/h$ share
+of the rounds. When the gap profile is constant across issue times in the window, $\sum_iw_iG_i$ is the average discounted return gap. We are not aware of a
+time-uniform version of this statement in the literature.
+\end{remark}
+
+\subsection{Detection delay}
+
+Take the e-detector $R_t$ built from the mixture bet. For the alarm time $T=\inf\{t:R_t\ge1/\alpha\}$ the classical argument gives the false-alarm guarantee, and a martingale
+concentration argument gives a finite-sample delay.
+
+\begin{theorem}[Finite-sample detection delay]\label{thm:delay}
+Let $X_k=Z_k-\eps$ with $|X_k|\le B'$. \emph{(a)} Under the null, $\E_\infty[T]\ge1/\alpha$. \emph{(b)} Suppose that after a changepoint $\tau$,
+$\E[X_k\mid\Fcal_{k-1}]\ge\Delta>0$ and $\E[X_k^2\mid\Fcal_{k-1}]\le v$ for all $k>\tau$, and that the grid is linear on $(0,1/B']$ with $m$ points and
+$\Delta\ge 2v/(mB')$. Let $\lambda^\star=\min\{\Delta/(2v),\,1/(2B')\}$. For every $\delta\in(0,1)$ and
+\begin{equation}\label{eq:N}
+n\ \ge\ N\defeq\max\Big\{\,\frac{8\log(m/\alpha)}{\lambda^\star\Delta},\ \frac{(80v+8B'\Delta)\log(1/\delta)}{\Delta^2}\Big\},
+\end{equation}
+we have, for every history, $\PR(T-\tau>n\mid\Fcal_\tau,\,T>\tau)\le\delta$. Note $8/(\lambda^\star\Delta)\le16(v/\Delta^2+B'/\Delta)$.
+\emph{(c)} For horizon $h$ on a non-overlapping chain, with per-chain margin $\Delta_h$ and second moment $v_h$, the delay in rounds is at most $h(N_h+1)$.
+\end{theorem}
+
+The proof is in Appendix~\ref{app:delay}. In the regime where the variance term dominates ($v\gg B'\Delta$), $N\approx16\,v\log(m/\alpha)/\Delta^2$, which is within a factor $8(1+\log m/\log(1/\alpha))$ of the Lorden--Lai lower bound
+$2\sigma^2\log(1/\alpha)/\Delta^2$ for a Gaussian-like pair with the same mean shift and variance \citep{lorden1971,lai1998information}. When the
+bet saturates ($v\lesssim B'\Delta$) the delay scales as $B'/\Delta$ instead of $1/\Delta^2$. Part (c) is the horizon-resolved law: horizon $h$ pays a factor $h$ for fewer updates and
+gains through a larger margin $\Delta_h$ as the shift compounds along the rollout. Section~\ref{sec:exp-horizon} tests the resulting prediction $h(\log(H/\alpha)+\log m)/D^\star_h$ with $D^\star_h=\sup_\lambda\E\log(1+\lambda Z)$.
+
+\begin{remark}[The e-process alone]
+For the plain e-process $W$ started at $1$, the same argument holds with $\log(m/\alpha)$ replaced by $\log(m/(\alpha W_\tau))$, where $W_\tau$ is the wealth at the changepoint: wealth lost before the change
+delays the alarm. The Shiryaev--Roberts form removes this term because it contains the term started at $\tau{+}1$ at full wealth.
+\end{remark}

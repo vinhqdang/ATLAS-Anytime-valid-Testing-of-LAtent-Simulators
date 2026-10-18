@@ -1,0 +1,25 @@
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{What the evidence supports.} Time-uniform false-revocation control held in every setting we tried, including a planner that watches the monitor and a stream whose state distribution is a function of the model. The finite-sample
+delay theory predicts measured delay across horizons to within $16\%$ on a system where the post-change statistic is known. The certified total-variation bound was never violated and was off by a factor of $1.6$ to $3$ after a change. On
+real video the construction detects the shifts we tried, and what decides whether it is also quiet beforehand is the tolerance.
+
+\paragraph{Limitations.}
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+\item \emph{The tolerance is a modeling choice and the dangerous one.} The guarantee needs $\E[Z_k\mid\Fcal_{k-1}]\le\eps_h$ conditionally. A constant tolerance set to the pooled in-distribution mean of a statistic whose conditional mean varies with the state does not satisfy it (ablation D: $0.253$ false revocations; real video with $k=0$: Section~\ref{sec:exp-real}). The standardized Gaussian excess is pivotal and has no such problem, but only for models that output a calibrated predictive covariance.
+On real video we calibrate $\eps_h$ from held-out clips with a margin; that is empirically safe in our replications and not a guarantee.
+\item \emph{Certificates are expensive.} Pinsker's inequality squares twice on the way from the mean of the statistic to total variation, so certifying a budget $\tau$ needs on the order of $\tau^{-4}$ rounds at one horizon and $h$ times more at horizon $h$.
+In the simulator, windows of a few hundred rounds certify a gap of the size of our drifts but not a small budget on a faithful model (certified $1.63$ nats against a true $0$ in Figure~\ref{fig:teaser}). The certified horizon is therefore informative after large changes and conservative otherwise.
+\item \emph{Long horizons are intrinsically costly.} Non-overlapping chains give horizon $h$ a $1/h$ share of the rounds; we found no valid way to pool the discarded rounds (Section~\ref{sec:overlap}). In our simulator a growing margin offsets this; in general it need not.
+\item \emph{Power is not guaranteed under steering.} A planner heading for states where the same error is harder to see delays detection by about $1.5\times$ in our study; we do not bound this in general.
+\item \emph{Transients and ramps.} A cumulative e-process detects sustained changes; a $150$-round pulse was detected in $17\%$ of runs and a ramp is detected late.
+\item \emph{Scope of the real-video evidence.} The replicated real-video study uses a lightweight PCA-plus-linear world model on three shifts. The experiments on learned neural world models (convolutional autoencoder, JEPA-style) on KITTI driving and UZH-FPV drone video were single runs that illustrate the interface and are not replicated; they appear in the supplement of the repository and are not used in any claim above. The benchmark shifts (speed, gait, domain) are large; subtle drifts are the harder and more useful case.
+\item \emph{Planner effects are not measured.} We certify the model; we do not show that clipping imagination depth to $\min(\hstar,\hcert_\tau)$ improves task return, which needs a closed-loop control study.
+\end{itemize}
+
+\paragraph{Practical guidance.} Use a statistic whose conditional mean is pivotal if the model provides a calibrated predictive covariance; otherwise add a margin to $\eps_h$ and validate it by replaying held-out in-distribution streams for longer than the deployment horizon. Read the certified horizon over a window rather than the full history. Use the revocation frontier as the alarm
+and the certified horizon as the gate; do not treat the first as evidence for the second.
+
+\paragraph{Future work.} Valid pooling of overlapping horizon chains; tolerance learned from a downstream control budget; windowed e-detectors for transients; replicated neural-world-model studies on driving and aerial video; and a closed-loop study of whether the gate improves control performance.
+
+\paragraph{Reproducibility.} Code, seeds, and the JSON outputs of every table are in the supplementary material. No new data were collected; the real-video experiments use the public Moving MNIST and KTH datasets.

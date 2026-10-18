@@ -1,15 +1,16 @@
-"""Experiment 9 -- empirical check of the anytime-valid simulation lemma.
+"""Experiment 9 -- empirical check of the anytime-valid certified horizon (Theorem 2).
 
-On the linear-Gaussian simulator the true h-step total-variation gap between the model's
-action-conditioned predictive and the true law is available in closed form, so the lemma
+Each horizon ``h`` carries a confidence sequence on the average conditional mean of its
+own (non-overlapping-chain) calibration statistic. For the standardised Gaussian statistic
+with matched covariance the divergence is ``KL = (d/2) E[Z]`` (certifiability constants
+``c = d/2``, ``rho = 0``), so with Pinsker's modulus the lemma certifies
 
-    avg_{issue times in a window} TV_h  <=  h * phi( c * U_t + rho )
+    window-average TV_h  <=  min(1, sqrt( c * U^{(h)}_t / 2 )),   simultaneously in t and h.
 
-(open-loop version, Theorem 2(a); phi(u) = sqrt(u/2), certifiability c = d/2, rho = 0 for the
-standardised Gaussian statistic with matched covariance) can be checked against the truth.
-We report (i) the violation rate of the certified bound over independent deployments,
-at checkpoints before and after a dynamics drift (the guarantee is <= alpha = 0.05), and
-(ii) its slack, bound / truth.
+On the linear-Gaussian simulator the true TV_h is available in closed form, so we report
+(i) the violation rate of the certified bound over independent deployments at checkpoints
+before and after a dynamics drift (the guarantee is <= alpha = 0.05) and (ii) its slack,
+bound / truth.
 
 Run: ``python -m experiments.exp9_simlemma``
 """
@@ -24,14 +25,14 @@ from scipy.stats import norm
 
 from atlas.simulator import Simulator
 from atlas.cs import AvgCondMeanCS, WindowedCS
-from atlas.fastsim import excess_all_issue_times
+from atlas.fastsim import excess_all_issue_times, chain
 
 RESULTS = os.path.join(os.path.dirname(__file__), "..", "results")
 ALPHA = 0.05
-CP, T, W = 500, 1800, 200
+CP, T, W = 500, 2500, 400
 DRIFT = 0.25
 HORIZONS = [1, 3, 8]
-CHECK = [CP - 1, CP + 150, CP + 400, T - 1]
+CHECK = [CP - 1, CP + 300, CP + 800, T - 30]
 N = 150
 
 
@@ -57,32 +58,32 @@ def main():
 
     viol = {(c, h): 0 for c in CHECK for h in HORIZONS}
     ratio = {(c, h): [] for c in CHECK for h in HORIZONS}
-    bound_hist = {c: [] for c in CHECK}
     for _ in range(N):
         z, a = sim.rollout(T, changepoint=CP, drift_mag=DRIFT)
-        zs = excess_all_issue_times(sim, z, a, 1)           # one-step statistic, all rounds
-        full = AvgCondMeanCS(-1.0, sim.B, alpha=ALPHA / 2)
-        win = WindowedCS(-1.0, sim.B, window=W, alpha=ALPHA / 2)
-        ups = {}
-        for t, v in enumerate(zs):
-            full.update(v); win.update(v)
-            if t in CHECK:
-                # pre-drift: the whole history is in-distribution; afterwards use the window
-                u = full.upper if t < CP else win.upper
-                ups[t] = max(u, 0.0)
-        for c in CHECK:
-            kl_bound = (d / 2.0) * ups[c]                    # c * U (+ rho = 0)
-            tv_1 = np.sqrt(kl_bound / 2.0)                  # Pinsker modulus
-            lo = max(c - W, 0)
-            frac_post = np.mean([1.0 if t >= CP else 0.0 for t in range(lo, c + 1)])
-            for h in HORIZONS:
-                truth = frac_post * tv_true[h]              # window-average of the true TV_h
-                bound = min(h * tv_1, 1.0)
-                if truth > bound + 1e-9:
-                    viol[(c, h)] += 1
-                if truth > 1e-6:
-                    ratio[(c, h)].append(bound / truth)
-            bound_hist[c].append(tv_1)
+        for h in HORIZONS:
+            ex = excess_all_issue_times(sim, z, a, h)
+            zv, rt = chain(ex, h, 0)                         # resolution rounds rt
+            wh = max(W // h, 4)                              # window length in chain updates
+            full = AvgCondMeanCS(-1.0, sim.B, alpha=ALPHA / (2 * len(HORIZONS)))
+            win = WindowedCS(-1.0, sim.B, window=wh, alpha=ALPHA / (2 * len(HORIZONS)))
+            ups = {}
+            ci = 0
+            for k, v in enumerate(zv):
+                full.update(v); win.update(v)
+                while ci < len(CHECK) and rt[k] >= CHECK[ci]:
+                    c = CHECK[ci]
+                    ups[c] = max(full.upper if c < CP else win.upper, 0.0)
+                    # fraction of the window's chain updates that are post-drift
+                    lo = win._start() if c >= CP else 0   # the CS's own window
+                    issue = rt[lo:k + 1] - h
+                    frac = float(np.mean(issue >= CP))
+                    truth = frac * tv_true[h]
+                    bound = min(1.0, np.sqrt((d / 2.0) * ups[c] / 2.0))
+                    if truth > bound + 1e-9:
+                        viol[(c, h)] += 1
+                    if truth > 1e-6:
+                        ratio[(c, h)].append(bound / truth)
+                    ci += 1
 
     print("\ncheckpoint rounds:", CHECK, "(drift opens at", CP, ")")
     out = {}

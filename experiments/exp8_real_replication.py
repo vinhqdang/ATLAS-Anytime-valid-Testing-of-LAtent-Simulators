@@ -180,8 +180,8 @@ def run(kind):
     m0, sd0 = float(ref.mean()), float(ref.std())
     factories = {
         "CUSUM": (lambda s: CUSUM(m0, 0.25 * sd0, s), np.linspace(0.5, 60, 24)),
-        "ADWIN": (lambda s: ADWIN(delta=s), np.logspace(-8, -0.5, 14)),
-        "KSWIN": (lambda s: KSWIN(alpha=s), np.logspace(-5, -1.3, 14)),
+        "ADWIN": (lambda s: ADWIN(delta=s), np.logspace(-14, -0.5, 20)),
+        "KSWIN": (lambda s: KSWIN(alpha=s), np.logspace(-30, -1.3, 20)),
         "Conformal MG": (lambda s: ConformalMartingale(ref, alpha=ALPHA), [None]),
     }
     tuned = {}

@@ -7,3 +7,4 @@ scikit-learn>=1.2
 imageio[ffmpeg]>=2.30
 # GPU phase — neural world model (experiments/gpu); CPU wheel works for smoke tests
 torch>=2.0
+river>=0.21   # competitor detectors (Page-Hinkley, ADWIN, KSWIN)
