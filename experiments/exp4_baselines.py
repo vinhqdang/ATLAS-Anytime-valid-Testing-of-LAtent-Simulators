@@ -2,7 +2,7 @@
 
 We compare ATLAS's anytime-valid e-process against established detectors from the
 streaming and sequential-analysis literature---CUSUM (Page 1954), the Page--Hinkley test,
-ADWIN (Bifet & Gavald{\`a} 2007), KSWIN (Raab et al. 2020), and Bayesian Online Changepoint
+ADWIN (Bifet & Gavalda 2007), KSWIN (Raab et al. 2020), and Bayesian Online Changepoint
 Detection (Adams & MacKay 2007)---on the controllable simulator where ground truth is
 known. Every monitor consumes the same one-step calibration-excess stream.
 

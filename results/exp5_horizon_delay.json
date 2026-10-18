@@ -1,0 +1,104 @@
+{
+  "rows": [
+    {
+      "h": 1,
+      "dstar": 0.015798408092015007,
+      "predicted": 502.4161073655949,
+      "non_overlap": 507.17333333333335,
+      "miss_non": 0,
+      "interleaved": 507.17333333333335,
+      "miss_int": 0,
+      "median_non": 488.5,
+      "median_int": 488.5
+    },
+    {
+      "h": 2,
+      "dstar": 0.030461174222776208,
+      "predicted": 521.1469944076166,
+      "non_overlap": 483.58666666666664,
+      "miss_non": 0,
+      "interleaved": 475.6933333333333,
+      "miss_int": 0,
+      "median_non": 468.0,
+      "median_int": 462.5
+    },
+    {
+      "h": 3,
+      "dstar": 0.04383550839606863,
+      "predicted": 543.215419639697,
+      "non_overlap": 496.52,
+      "miss_non": 0,
+      "interleaved": 494.18666666666667,
+      "miss_int": 0,
+      "median_non": 488.0,
+      "median_int": 487.0
+    },
+    {
+      "h": 5,
+      "dstar": 0.06684913902527563,
+      "predicted": 593.6781544158838,
+      "non_overlap": 523.4333333333333,
+      "miss_non": 0,
+      "interleaved": 553.52,
+      "miss_int": 0,
+      "median_non": 520.0,
+      "median_int": 542.0
+    },
+    {
+      "h": 8,
+      "dstar": 0.0999704035294634,
+      "predicted": 635.1779659526117,
+      "non_overlap": 537.44,
+      "miss_non": 0,
+      "interleaved": 617.2133333333334,
+      "miss_int": 0,
+      "median_non": 536.0,
+      "median_int": 609.5
+    },
+    {
+      "h": 12,
+      "dstar": 0.13635034168558255,
+      "predicted": 698.5570785997593,
+      "non_overlap": 584.48,
+      "miss_non": 0,
+      "interleaved": 711.4666666666667,
+      "miss_int": 0,
+      "median_non": 584.0,
+      "median_int": 714.5
+    },
+    {
+      "h": 20,
+      "dstar": 0.18630458644235184,
+      "predicted": 852.0858071971678,
+      "non_overlap": 731.8666666666667,
+      "miss_non": 0,
+      "interleaved": 923.3933333333333,
+      "miss_int": 0,
+      "median_non": 740.0,
+      "median_int": 919.0
+    }
+  ],
+  "null_any_non": 0.005,
+  "null_any_int": 0.0025,
+  "null_non": {
+    "1": 0.0025,
+    "2": 0.0,
+    "3": 0.0025,
+    "5": 0.0,
+    "8": 0.0,
+    "12": 0.0,
+    "20": 0.0
+  },
+  "null_int": {
+    "1": 0.0025,
+    "2": 0.0,
+    "3": 0.0,
+    "5": 0.0,
+    "8": 0.0,
+    "12": 0.0,
+    "20": 0.0
+  },
+  "n_runs": 150,
+  "n_null": 400,
+  "drift": 0.25
+}

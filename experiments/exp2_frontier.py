@@ -1,40 +1,35 @@
-"""Experiment 2 — the faithfulness frontier & the anytime-valid simulation lemma.
+"""Experiment 2 -- the faithfulness frontier and the certified one-step gap.
 
-A single long deployment with a dynamics drift injected at a known changepoint.
-ATLAS maintains:
+One long deployment with a dynamics drift injected at a known changepoint. ATLAS maintains
 
-  * ``delta1_hat(t)`` — the certified anytime upper bound on the one-step
-    faithfulness gap (upper edge of the BettingCS at h=1), Theorem-1-as-CS;
-  * ``h*(t)`` — the Theorem-2 trust horizon
-    ``max{h : C(h,gamma) * phi(delta1_hat(t)) <= budget}``,
-    the largest horizon a planner may legally imagine while keeping the certified
-    value gap within budget (docs/03_theorems.md, Theorem 2).
+  * ``U(t)``   -- the anytime-valid *windowed* upper confidence bound on the average one-step
+                  gap (``atlas.cs.WindowedCS``; the object the simulation lemma consumes), and
+  * ``h*(t)``  -- the faithfulness frontier from the per-horizon e-processes
+                  (non-overlapping chains, level alpha/H each, monotone rule).
 
-The signature result: ``h*(t)`` holds high while the model is faithful and
-**collapses right when the drift opens**, whereas an offline metric fixed at its
-pre-deployment value is blind by construction.
+An offline metric frozen at its pre-deployment value is blind by construction.
 
 Run: ``python -m experiments.exp2_frontier``
 """
 
 from __future__ import annotations
 
+import json
 import os
+
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from atlas.simulator import Simulator
-from atlas.eprocess import BettingCS
-from atlas.frontier import amplification, trust_horizon_from_gap
+from atlas.cs import WindowedCS
+from atlas.fastsim import (excess_all_issue_times, chain, log_wealth_path, first_cross,
+                           lam_grid)
 
 ALPHA = 0.05
-GAMMA = 0.98
-BUDGET = 350.0         # planner's tolerated certified value gap
-T = 3000
-CP = 900
-DRIFT = 0.7
+HORIZONS = [1, 2, 3, 5, 8, 12, 20]
+T, CP, DRIFT, WINDOW = 2500, 900, 0.6, 150
 RESULTS = os.path.join(os.path.dirname(__file__), "..", "results")
 
 
@@ -42,76 +37,81 @@ def main():
     os.makedirs(RESULTS, exist_ok=True)
     sim = Simulator(dim=4, seed=1)
     z, a = sim.rollout(T, changepoint=CP, drift_mag=DRIFT)
-    by_time, truth = sim.resolved_stream(z, a, [1], changepoint=CP)
+    H = len(HORIZONS)
+    lams = lam_grid(-1.0, sim.B, 20)
 
-    cs = BettingCS(z_lo=-1.0, z_hi=sim.B, alpha=ALPHA)
-    delta1 = np.full(T + 1, np.nan)
-    hstar = np.full(T + 1, np.nan)
-    h_grid = np.arange(1, 81)
-    frozen_delta1 = np.nan
-    for t, row in enumerate(by_time):
-        if 1 in row:
-            cs.update(row[1])
-        if cs.k > 0:
-            d = cs.upper
-            delta1[t] = d
-            hstar[t] = trust_horizon_from_gap(d, GAMMA, BUDGET, h_grid=h_grid)
-        if t == CP:                       # freeze the offline estimate at deployment
-            frozen_delta1 = cs.upper
+    # ---- frontier from per-horizon e-processes
+    revoke_round = {}
+    for h in HORIZONS:
+        ex = excess_all_issue_times(sim, z, a, h)
+        zv, rt = chain(ex, h, 0)
+        i = first_cross(log_wealth_path(zv, 0.0, lams), np.log(H / ALPHA))
+        revoke_round[h] = int(rt[i]) if i is not None else None
+    tt = np.arange(1, T + 1)
+    hstar = np.empty(len(tt), int)
+    for j, t in enumerate(tt):
+        hs = 0
+        for h in HORIZONS:
+            if revoke_round[h] is not None and revoke_round[h] <= t:
+                break
+            hs = h
+        hstar[j] = hs
 
-    # offline metric: certified once at deployment (t=CP), then frozen -> blind
-    offline_gap = frozen_delta1
-    offline_hstar = trust_horizon_from_gap(max(offline_gap, 0), GAMMA, BUDGET,
-                                           h_grid=h_grid)
+    # ---- certified windowed one-step gap (KL units: c * U with c = d/2)
+    ex1 = excess_all_issue_times(sim, z, a, 1)
+    cs = WindowedCS(-1.0, sim.B, window=WINDOW, alpha=ALPHA)
+    kl_cert = np.empty(len(ex1))
+    for t, v in enumerate(ex1):
+        cs.update(v)
+        kl_cert[t] = (sim.dim / 2.0) * max(cs.upper, 0.0)
+    d = sim.dim
+    kl_true = np.where(np.arange(len(ex1)) >= CP, 0.5 * DRIFT ** 2
+                       * float(sim.drift_dir @ np.linalg.solve(sim.Q, sim.drift_dir)), 0.0)
+    # the certificate is for the *window average*; compare against the true window average
+    kl_true_win = np.empty(len(kl_true))
+    for t in range(len(kl_true)):
+        st = max((t + 1 - WINDOW) // cs.block, 0) * cs.block
+        kl_true_win[t] = kl_true[st:t + 1].mean()
+    offline_kl = float(kl_cert[CP - 1])
+    offline_h = int(hstar[CP - 1])
 
-    true_pre = float(truth["raw_excess"][1][:CP].mean())
-    true_post = float(truth["raw_excess"][1][CP:].mean())
-
+    first_drop = next((int(t) for t, hs in zip(tt, hstar) if t >= CP and hs < hstar[CP - 1]),
+                      None)
     print("=" * 64)
-    print("Experiment 2 — frontier collapse & anytime-valid simulation lemma")
+    print("Experiment 2 -- frontier and certified one-step gap")
     print("=" * 64)
-    print(f"changepoint={CP}, drift={DRIFT}, gamma={GAMMA}, budget={BUDGET}")
-    print(f"true one-step gap: pre={true_pre:+.3f}  post={true_post:+.3f}")
-    valid = np.nanmax(delta1[10:CP]) >= true_pre    # CS upper-bounds the pre gap
-    print(f"delta1_hat: pre~{np.nanmean(delta1[CP-100:CP]):.3f}  "
-          f"post-end~{delta1[T-1]:.3f}  (valid upper bound pre: {valid})")
-    print(f"h*: pre={int(np.nanmax(hstar[CP-100:CP]))}  final={int(hstar[T-1])}  "
-          f"| offline (frozen) h*={offline_hstar}")
-    # when did h* first drop after cp?
-    post = hstar[CP:]
-    base = int(np.nanmax(hstar[CP-100:CP]))
-    drop = np.argmax(post < base)
-    print(f"h* first drops {drop} rounds after the changepoint "
-          f"(from {base} toward {int(hstar[T-1])})")
+    print(f"drift={DRIFT}, changepoint={CP}; revocation round per horizon:")
+    print({h: (None if r is None else r - CP) for h, r in revoke_round.items()},
+          "(rounds after the change)")
+    print(f"h*: pre={hstar[CP-1]}  final={hstar[-1]}  first drop {None if first_drop is None else first_drop - CP} rounds after change")
+    print(f"certified gap (KL units): pre {kl_cert[CP-1]:.3f}  post {kl_cert[-1]:.3f}  "
+          f"true post {kl_true[-1]:.3f}")
+    print("certified >= true window average everywhere:", bool(np.all(kl_cert + 1e-9 >= kl_true_win)))
 
-    # ---- figure -------------------------------------------------------------
-    tt = np.arange(T + 1)
-    fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
-
-    ax0.plot(tt, delta1, color="#3b7dd8", lw=1.6, label=r"$\hat\delta_1(t)$ (ATLAS, anytime-valid)")
-    ax0.axhline(offline_gap, color="#999", ls=":", lw=1.6,
-                label="offline metric (frozen pre-deployment)")
-    ax0.axvline(CP, color="crimson", ls="--", lw=1.2, label="dynamics drift onset")
-    ax0.set_ylabel("certified one-step gap")
-    ax0.set_title("ATLAS tracks the faithfulness gap; the offline metric is blind")
-    ax0.legend(frameon=False, loc="upper left")
-
-    ax1.plot(tt, hstar, color="#1b8a5a", lw=2.0, label=r"$h^*(t)$ ATLAS trust horizon")
-    ax1.axhline(offline_hstar, color="#999", ls=":", lw=1.6,
-                label="offline-metric trust horizon (blind)")
-    ax1.axvline(CP, color="crimson", ls="--", lw=1.2)
-    ax1.set_xlabel("deployment round")
-    ax1.set_ylabel(r"trust horizon $h^*(t)$")
-    ax1.set_title(r"$h^*(t)$ collapses exactly when the sim-to-real gap opens")
-    ax1.legend(frameon=False, loc="upper right")
-
+    fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(9.5, 6.4), sharex=True)
+    ax0.plot(kl_cert, color="#3b7dd8", lw=1.5, label=r"certified bound (windowed, anytime-valid)")
+    ax0.plot(kl_true_win, color="k", lw=1.2, ls="--", label="true window-average gap (KL)")
+    ax0.axhline(offline_kl, color="#999", ls=":", lw=1.5, label="offline estimate (frozen)")
+    ax0.axvline(CP, color="crimson", ls="--", lw=1)
+    ax0.set_ylabel("one-step gap (nats)"); ax0.legend(frameon=False, fontsize=8)
+    ax0.set_title("Certified one-step gap tracks the drift")
+    ax1.step(tt, hstar, where="post", color="#1b8a5a", lw=2.0, label=r"ATLAS frontier $h^\star(t)$")
+    ax1.axhline(offline_h, color="#999", ls=":", lw=1.5, label="offline trust horizon (frozen)")
+    ax1.axvline(CP, color="crimson", ls="--", lw=1, label="drift onset")
+    ax1.set_xlabel("deployment round"); ax1.set_ylabel(r"$h^\star(t)$")
+    ax1.legend(frameon=False, fontsize=8)
+    ax1.set_title("The frontier holds while faithful and collapses after the drift")
     fig.tight_layout()
-    out = os.path.abspath(os.path.join(RESULTS, "exp2_frontier.png"))
-    fig.savefig(out, dpi=130)
-    print(f"\nfigure -> {out}")
-    return dict(true_pre=true_pre, true_post=true_post,
-                hstar_pre=int(np.nanmax(hstar[CP-100:CP])),
-                hstar_final=int(hstar[T-1]), offline_hstar=offline_hstar)
+    out = os.path.join(RESULTS, "exp2_frontier.png")
+    fig.savefig(out, dpi=130); plt.close(fig)
+    with open(os.path.join(RESULTS, "exp2_frontier.json"), "w") as f:
+        json.dump(dict(revocation_delay={h: (None if r is None else r - CP)
+                                         for h, r in revoke_round.items()},
+                       hstar_pre=int(hstar[CP - 1]), hstar_final=int(hstar[-1]),
+                       first_drop=None if first_drop is None else first_drop - CP,
+                       kl_pre=float(kl_cert[CP - 1]), kl_post=float(kl_cert[-1]),
+                       kl_true_post=float(kl_true[-1])), f, indent=2)
+    print("figure ->", os.path.abspath(out))
 
 
 if __name__ == "__main__":

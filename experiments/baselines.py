@@ -7,7 +7,7 @@ established algorithms from the streaming / sequential-analysis literature:
 * ``CUSUM``        -- Page's cumulative-sum change detector (Page, Biometrika 1954).
 * ``PageHinkley``  -- the Page--Hinkley sequential test (river implementation).
 * ``ADWIN``        -- ADaptive WINdowing with Hoeffding-bounded cuts
-  (Bifet & Gavald{\`a}, SDM 2007; river implementation).
+  (Bifet & Gavalda, SDM 2007; river implementation).
 * ``KSWIN``        -- Kolmogorov--Smirnov Windowing (Raab, Heusinger & Schleif,
   Neurocomputing 2020; river implementation).
 * ``BOCPD``        -- Bayesian Online Changepoint Detection (Adams & MacKay 2007),

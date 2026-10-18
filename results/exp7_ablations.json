@@ -1,0 +1,105 @@
+{
+  "A_bet": {
+    "mixture (20 lambdas)": {
+      "fa": 0.025,
+      "detect": 1.0,
+      "delay": 392.4
+    },
+    "GRAPA plug-in": {
+      "fa": 0.015,
+      "detect": 1.0,
+      "delay": 429.305
+    },
+    "fixed lambda = 0.1 lam_max": {
+      "fa": 0.0,
+      "detect": 0.965,
+      "delay": 1397.160621761658
+    },
+    "fixed lambda = 0.5 lam_max": {
+      "fa": 0.03,
+      "detect": 1.0,
+      "delay": 401.175
+    },
+    "fixed lambda = 1.0 lam_max": {
+      "fa": 0.0375,
+      "detect": 0.99,
+      "delay": 362.44444444444446
+    }
+  },
+  "B_tolerance": {
+    "g": 0.013803726524303596,
+    "rows": {
+      "eps = 0.0 x true gap g": {
+        "fa": 0.125,
+        "detect": 0.0,
+        "delay": null
+      },
+      "eps = 0.5 x true gap g": {
+        "fa": 0.055,
+        "detect": 0.0,
+        "delay": null
+      },
+      "eps = 1.0 x true gap g": {
+        "fa": 0.025,
+        "detect": 0.0,
+        "delay": null
+      },
+      "eps = 1.5 x true gap g": {
+        "fa": 0.02,
+        "detect": 0.0,
+        "delay": null
+      },
+      "eps = 2.5 x true gap g": {
+        "fa": 0.005,
+        "detect": 0.0,
+        "delay": null
+      }
+    }
+  },
+  "C_shape": {
+    "step": {
+      "fa": 0.03,
+      "detect": 0.995,
+      "delay": 365.42713567839195
+    },
+    "ramp": {
+      "fa": 0.03,
+      "detect": 0.995,
+      "delay": 607.1155778894472
+    },
+    "pulse": {
+      "fa": 0.03,
+      "detect": 0.17,
+      "delay": 326.29411764705884
+    }
+  },
+  "D_score": {
+    "calibration excess (Mahalanobis)": {
+      "fa": 0.025,
+      "detect": 1.0,
+      "delay": 392.4
+    },
+    "log-score vs climatology (eps=-1.0)": {
+      "fa": 0.0,
+      "detect": 0.0,
+      "delay": null
+    },
+    "log-score vs climatology (eps=null mean)": {
+      "fa": 0.2525,
+      "detect": 0.0,
+      "delay": null
+    }
+  },
+  "E_tails": {
+    "Gaussian noise": {
+      "fa": 0.025,
+      "detect": 1.0,
+      "delay": 392.4
+    },
+    "Student-t(5) noise (variance-matched)": {
+      "fa": 0.0075,
+      "detect": 0.985,
+      "delay": 820.5025380710659
+    }
+  }
+}
