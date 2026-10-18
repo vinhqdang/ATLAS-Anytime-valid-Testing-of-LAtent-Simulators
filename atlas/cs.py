@@ -42,7 +42,7 @@ def _psi(lam):
 
 
 class AvgCondMeanCS:
-    """Anytime-valid upper (and lower) confidence sequence for ``m_K``.
+    """Anytime-valid upper confidence sequence for ``m_K`` (no lower bound is provided).
 
     Parameters
     ----------
@@ -70,6 +70,7 @@ class AvgCondMeanCS:
         return (z - self.z_lo) / self.w
 
     def update(self, z):
+        assert self.z_lo - 1e-9 <= z <= self.z_hi + 1e-9, "statistic outside [z_lo, z_hi]"
         x = float(np.clip(self._r(z), 0.0, 1.0))
         d = x - self._guess
         self._vu += d * d

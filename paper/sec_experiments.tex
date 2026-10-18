@@ -14,7 +14,7 @@ The environment is a stable linear-Gaussian latent system whose world model uses
 \paragraph{No false revocation.} Over $400$ null deployments of $700$ rounds, no horizon among $\{1,2,5,10,20\}$ was ever revoked, against a per-horizon bound of $0.01$ and an any-horizon bound of $0.05$.
 In the horizon-resolved study below (seven horizons, $400$ null runs of $2{,}400$ rounds) the any-horizon rate is $0.005$. The rates sit far below the bound, as expected for an e-process that is a supermartingale under the null.
 
-\paragraph{Detection delay.} Sweeping the drift margin over $100$ seeds, the measured delay matches $(\log(1/\alpha)+\log m)/D^\star$ to within about $6\%$, with $\text{delay}\cdot D^\star\approx6$, and scales as $1/D^\star$ (Figure~\ref{fig:validity}).
+\paragraph{Detection delay.} Sweeping the drift margin over $100$ seeds, the measured delay matches $(\log(1/\alpha)+\log m)/D^\star$ to within $13\%$ at the smallest margin and $8\%$ elsewhere, with $\text{delay}\cdot D^\star\approx5.2$, and scales as $1/D^\star$ (Figure~\ref{fig:validity}).
 In this range the bet saturates, $D^\star\propto$ margin, and delay scales as one over the margin; the $1/\text{margin}^2$ regime of Theorem~\ref{thm:delay} requires margins below about $0.07$.
 
 \begin{figure}[t]\centering
@@ -31,8 +31,7 @@ In this range the bet saturates, $D^\star\propto$ margin, and delay scales as on
 \end{figure}
 
 \paragraph{The frontier and the certified gap.} With a drift of size $0.6$ opening at round $900$ (Figure~\ref{fig:teaser}), horizons $1,2,3,5,8,12,20$ are revoked $85,120,84,105,132,144,220$ rounds
-after the change; the frontier falls from $20$ to $0$, first dropping $84$ rounds after the change, while an offline estimate frozen at deployment stays at $20$. The windowed certified gap
-is never below the true window-average gap. It is also loose: $1.63$ nats before the change when the true gap is zero and $3.67$ after against a true $1.80$. A certificate is not a point estimate; it costs data (Section~\ref{sec:discussion}).
+after the change; the frontier falls from $20$ to $0$, first dropping $84$ rounds after the change, while an offline estimate frozen at deployment stays at $20$. The windowed certified gap (window $150$) is never below the true window-average gap in this one deployment (an illustration, not a coverage test; coverage is in Table~\ref{tab:cert}). It is also loose: $1.63$ nats before the change when the true gap is zero and $3.67$ after against a true $1.80$. A certificate is not a point estimate; it costs data (Section~\ref{sec:discussion}).
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.78\textwidth]{figures/exp2_frontier.png}
@@ -41,8 +40,7 @@ is never below the true window-average gap. It is also loose: $1.63$ nats before
 \end{figure}
 
 \paragraph{The certified horizon.} Using one chain per horizon with windows of $400$ rounds, the certified total-variation bound of Theorem~\ref{thm:cert} was checked against the closed-form truth over $150$ deployments, at checkpoints
-before the drift and $300$, $800$ and about $2{,}000$ rounds after it, for $h\in\{1,3,8\}$ (Table~\ref{tab:cert}). It was never violated ($0/150$ at every cell; the guarantee allows $5\%$) and its slack, bound over truth, is between $1.6$ and $3.0$ after the change. The slack at
-$h=1$ is largest because Pinsker's inequality is loose for a mean shift.
+before the drift and $300$, $800$ and about $2{,}000$ rounds after it, for $h\in\{1,3,8\}$ (Table~\ref{tab:cert}). It was never violated ($0/150$ at every cell; the guarantee allows $5\%$) and its slack, bound over truth, is between $1.6$ and $3.0$ after the change. The slack comes mostly from Pinsker's inequality, which is loose for a mean shift; each cell uses a confidence sequence at level $\alpha/(2H)$ and the check is at four fixed times, not a supremum over $t$.
 
 \begin{table}[t]\centering
 \caption{Certified total-variation bound against the exact value, $150$ deployments, drift size $0.25$ opening at round $500$. Violations: $0$ in every cell. Median slack = bound / truth.}
@@ -86,7 +84,7 @@ measured, interleaved & 507 & 476 & 494 & 554 & 617 & 712 & 923 \\
 \label{fig:horizon}
 \end{figure}
 
-The prediction is within $16\%$ of the measurement at every horizon and errs on the conservative side. Two features are worth stating plainly. First, in this system $D^\star_h$ grows roughly in proportion to $h$, so the factor-$h$ loss
+The first-order prediction is within $20\%$ of the measurement at every horizon and errs on the conservative side; it is a heuristic law (growth rate of the post-change statistic), not the finite-sample bound $N$ of Theorem~\ref{thm:delay}, which is $9$--$15\times$ loose here. Two features are worth stating plainly. First, in this system $D^\star_h$ grows roughly in proportion to $h$, so the factor-$h$ loss
 is almost exactly offset and delay in rounds is nearly flat in $h$ (between $484$ and $732$); long horizons are not slower \emph{here}, but nothing in the theory says that must hold for other dynamics. Second, the interleaved estimator,
 which was meant to win back the data discarded by non-overlap, is no faster and is slower at long horizons ($923$ against $732$ rounds at $h=20$), as the pooling argument of Section~\ref{sec:overlap} predicts. Under the null both
 estimators stay valid (any-horizon false revocation $0.005$ and $0.003$).
@@ -95,7 +93,7 @@ estimators stay valid (any-horizon false revocation $0.005$ and $0.003$).
 
 We test the claim that exchangeability- and calibration-based monitors lose validity when the planner steers the state, on a closed-loop latent world model with state-dependent noise in which the world model is
 exactly faithful, so every alarm under the null is a false alarm (Appendix~\ref{app:details}). Four planners generate the stream: exogenous exploration (\emph{exo}); a certainty-equivalent controller run through the model toward a low-noise state (\emph{low}) or
-toward a high-noise state (\emph{high}); and a monitor-aware planner (\emph{adv}) that runs ATLAS's own e-process on the stream it produces and moves to the high-noise region whenever the wealth is positive. The mean noise level induced is $0.24$, $0.15$, $0.33$ and $0.15$ respectively.
+toward a high-noise state (\emph{high}); and a monitor-aware planner (\emph{adv}) that runs ATLAS's own e-process on the stream it produces and moves to the high-noise region whenever the wealth is positive. Under the null the wealth is usually below one, so this planner sits mostly in the low-noise region (its mean noise level equals that of \emph{low}); it is a weak adversary and the point of the experiment is the monitors on raw error, not a worst case. The mean noise level induced is $0.24$, $0.15$, $0.33$ and $0.15$ respectively.
 Each monitor sees either the \emph{raw} squared prediction error, the quantity practitioners monitor, or the model-\emph{standardized} statistic that ATLAS uses. Tunable detectors are calibrated to a $5\%$ false-alarm rate at $400$ rounds on a separate exogenous calibration deployment, the
 usual offline protocol, then run for $1{,}200$ rounds under each planner ($300$ runs each).
 
@@ -129,7 +127,7 @@ Three patterns appear in Table~\ref{tab:endo}. (i) Calibrated offline on exogeno
 high-noise region, and under the monitor-aware planner every raw monitor reaches $0.40$--$0.73$; under the low-noise planner the same monitors alarm almost never, which would mask a real drift. (ii) On the
 standardized stream the exchangeability-based conformal martingale is valid for \emph{every} planner. That is not an accident: when the model is exactly faithful the standardized statistic is pivotal, identically distributed whatever the planner does, so the planner cannot hurt a monitor that
 sees it. The change detectors on that stream still inflate with monitoring time (Page--Hinkley $0.08\to0.56$). The honest summary is that conformal monitors are fine on a pivotal statistic and ATLAS's advantage is that it needs no
-pivotality and no tuning, only a conditional-mean bound. (iii) ATLAS never exceeded $0.013$ under any planner, including the one that watches its wealth.
+pivotality and no tuning, only a conditional-mean bound. (iii) ATLAS never exceeded $0.013$ under any planner. Because the standardized statistic is pivotal, this cannot fail for any planner; we have not tested a non-pivotal statistic under steering, and ablation D (exogenous) shows that case can fail.
 
 \paragraph{Power depends on the planner.} After an unmodelled drift of size $0.4$ at round $400$, ATLAS detected the drift in every run with mean delay $346$, $211$, $532$ and $471$ rounds under \emph{exo}, \emph{low}, \emph{high} and \emph{adv}. The planner that seeks high-noise states shields the drift
 by roughly $1.5\times$ against exogenous exploration, since the same mean shift moves the standardized statistic less where the noise is larger. The conformal martingale on the standardized stream is slower by $1.6$--$2.2\times$ in every setting and misses the drift in $3$--$5\%$ of runs. Validity under endogeneity is a theorem; power under endogeneity is an empirical quantity that this study
@@ -145,7 +143,7 @@ measures for one family of planners and does not bound in general.
 
 Three real shifts are studied with a PCA-plus-linear-dynamics latent world model: Moving MNIST \citep{srivastava2015movingmnist} native speed to double speed, KTH \citep{schuldt2004kth} walking to running, and KTH walking outdoors to indoors. Each
 of 30 repetitions draws a fresh random split into training, calibration, in-distribution deployment and shifted deployment clips, refits the world model, and sets the tolerance $\eps_h=\bar z_h+k\,s_h$ from the calibration clips (mean $\bar z_h$ and standard deviation $s_h$ of the clipped statistic, with $k\in\{0,0.25,0.5,1\}$).
-Competing detectors are tuned on a separate set of 30 repetitions to a $5\%$ false-alarm rate over the in-distribution deployment length $L$. We report false alarms over $L$ clips and over $3L$ (in-distribution clips resampled with replacement, standing in for longer monitoring), and detection rate and delay in clips after the shift, with bootstrap $95\%$ intervals.
+Competing detectors are tuned on a separate set of 30 repetitions to a $5\%$ false-alarm rate over the in-distribution deployment length $L$. We report false alarms over $L$ clips and over $3L$ (in-distribution clips resampled with replacement, standing in for longer monitoring), and detection rate and delay in clips after the shift, with bootstrap $95\%$ intervals. False-alarm rates over $L$ and $3L$ clips come from independent resamples, so the $L$ rate can exceed the $3L$ rate by chance. The tolerance is estimated from the same population, so Theorem~\ref{thm:validity} does not apply to these runs, and no confidence sequence or certificate is run on real data.
 
 \input{tab_real}
 
@@ -186,7 +184,7 @@ Section~\ref{sec:exp-endo} shows, loses validity when fed non-pivotal scores on 
 
 \subsection{Ablations and negative results}\label{sec:exp-abl}
 
-Table~\ref{tab:abl} collects five ablations at horizon one ($400$ null and $200$ alternative runs per cell; drift $0.25$ at round $500$ unless noted).
+Table~\ref{tab:abl} collects five ablations at horizon one ($400$ null and $200$ alternative runs per cell, independent samples for each row, so identical configurations such as ``mixture'' and ``step'' differ by Monte Carlo noise; drift $0.25$ at round $500$ unless noted).
 
 \begin{table}[t]\centering
 \caption{Ablations. FA = false-revocation rate under the null (or, in B, revocation rate for a model whose true gap is $g=0.0138$); detect = fraction detected after the drift; delay in rounds.}

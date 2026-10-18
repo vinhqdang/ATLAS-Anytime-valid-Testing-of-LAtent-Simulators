@@ -48,7 +48,7 @@ $\PR(\exists K,j:\ \nu_jM_K(\lambda_j)\ge1/\alpha)\le\alpha$; rearranging gives 
 \begin{corollary}[Windows]\label{cor:window}
 Restart the sequence at block starts $s_i=ib$ and give start $s_i$ the level $\alpha/((i+1)(i+2))$. Then with probability at least $1-\alpha$, simultaneously
 for all starts and all end times, the average conditional mean over $(s_i,t]$ is at most the corresponding bound.
-Reading the window with the latest start $s_i\le t-w_0$ gives an anytime-valid bound on the \emph{recent} average over a window of length in $[w_0,w_0+b)$.
+Reading the window with the latest start $s_i\le t-w_0$ gives an anytime-valid bound on the \emph{recent} average over a window of length in $[w_0,w_0+b)$ (for $t<w_0$ it is the whole history).
 \end{corollary}
 \begin{proof}
 Apply Lemma~\ref{lem:cs} at each start with level $\alpha_i=\alpha/((i+1)(i+2))$ and use $\sum_i\alpha_i\le\alpha$.
@@ -67,7 +67,7 @@ Then with probability at least $1-\alpha$, simultaneously for all rounds $t$ and
 \begin{equation}\label{eq:certtv}
 \frac1{|\mathcal S_{h,t}|}\sum_{k\in\mathcal S_{h,t}}\TV\big(Q_{s_k,h},P^M_{s_k,h}\big)\ \le\ \min\big\{1,\ \phi\big(cU^{(h)}_t+\bar\rho\big)\big\}.
 \end{equation}
-Consequently, with probability at least $1-\alpha$, for all $t$ and all $h\le\hcert_\tau(t)$ the left side is at most $\tau$.
+Consequently, with probability at least $1-\alpha$, for all $t$ and all $h\le\hcert_\tau(t)$ the left side is at most $\tau$. The statement is about the \emph{window average} over logged issue times: a short spike inside a long window can be diluted below $\tau$, and it concerns the logged action sequences, not a counterfactual imagined policy.
 \end{theorem}
 \begin{proof}
 By certifiability the average divergence over $\mathcal S_{h,t}$ is at most $c\,m+\bar\rho$ with $m$ the average conditional mean, which Lemma~\ref{lem:cs} bounds by
@@ -86,7 +86,7 @@ For fixed actions $|\E_Pr-\E_Qr|\le R_{\max}\TV(P,Q)$; apply \eqref{eq:certtv} f
 
 \begin{remark}[Relation to the classical simulation lemma]
 The classical lemma \citep{kearns2002near} converts a \emph{known} one-step error into an $h$-step value gap, paying a compounding factor such as $\gamma/(1-\gamma)^2$.
-Here each horizon's own chain is certified, so there is no propagation step and no concentrability coefficient; the price is that horizon $h$ is certified from a $1/h$ share
+Here each horizon's own chain is certified, so there is no propagation step and no concentrability coefficient (the price is that the certified quantity is the discrepancy on the logged action sequences, not on counterfactual rollouts of a new policy); the price is that horizon $h$ is certified from a $1/h$ share
 of the rounds. When the gap profile is constant across issue times in the window, $\sum_iw_iG_i$ is the average discounted return gap. We are not aware of a
 time-uniform version of this statement in the literature.
 \end{remark}
@@ -97,20 +97,19 @@ Take the e-detector $R_t$ built from the mixture bet. For the alarm time $T=\inf
 concentration argument gives a finite-sample delay.
 
 \begin{theorem}[Finite-sample detection delay]\label{thm:delay}
-Let $X_k=Z_k-\eps$ with $|X_k|\le B'$. \emph{(a)} Under the null, $\E_\infty[T]\ge1/\alpha$. \emph{(b)} Suppose that after a changepoint $\tau$,
-$\E[X_k\mid\Fcal_{k-1}]\ge\Delta>0$ and $\E[X_k^2\mid\Fcal_{k-1}]\le v$ for all $k>\tau$, and that the grid is linear on $(0,1/B']$ with $m$ points and
-$\Delta\ge 2v/(mB')$. Let $\lambda^\star=\min\{\Delta/(2v),\,1/(2B')\}$. For every $\delta\in(0,1)$ and
+Let $X_k=Z_k-\eps$ (so $|X_k|\le w$, the width of the statistic's range). \emph{(a)} Under the null, $\E_\infty[T]\ge1/\alpha$. \emph{(b)} Suppose that after a changepoint $\tau$,
+$\E[X_k\mid\Fcal_{k-1}]\ge\Delta>0$ and $\E[X_k^2\mid\Fcal_{k-1}]\le v$ for all $k>\tau$, and that the grid is $\lambda_j=j/(mw)$, $j=1,\dots,m$ (the one the implementation uses) and
+$\Delta\ge 2v/(mw)$. Let $\lambda^\star=\min\{\Delta/(2v),\,1/(2w)\}$. For every $\delta\in(0,1)$ and
 \begin{equation}\label{eq:N}
-n\ \ge\ N\defeq\max\Big\{\,\frac{8\log(m/\alpha)}{\lambda^\star\Delta},\ \frac{(80v+8B'\Delta)\log(1/\delta)}{\Delta^2}\Big\},
+n\ \ge\ N\defeq\max\Big\{\,\frac{8\log(m/\alpha)}{\lambda^\star\Delta},\ \frac{(80v+8w\Delta)\log(1/\delta)}{\Delta^2}\Big\},
 \end{equation}
-we have, for every history, $\PR(T-\tau>n\mid\Fcal_\tau,\,T>\tau)\le\delta$. Note $8/(\lambda^\star\Delta)\le16(v/\Delta^2+B'/\Delta)$.
+we have, for every history, $\PR(T-\tau>n\mid\Fcal_\tau,\,T>\tau)\le\delta$. Note $8/(\lambda^\star\Delta)\le16(v/\Delta^2+w/\Delta)$.
 \emph{(c)} For horizon $h$ on a non-overlapping chain, with per-chain margin $\Delta_h$ and second moment $v_h$, the delay in rounds is at most $h(N_h+1)$.
 \end{theorem}
 
-The proof is in Appendix~\ref{app:delay}. In the regime where the variance term dominates ($v\gg B'\Delta$), $N\approx16\,v\log(m/\alpha)/\Delta^2$, which is within a factor $8(1+\log m/\log(1/\alpha))$ of the Lorden--Lai lower bound
-$2\sigma^2\log(1/\alpha)/\Delta^2$ for a Gaussian-like pair with the same mean shift and variance \citep{lorden1971,lai1998information}. When the
-bet saturates ($v\lesssim B'\Delta$) the delay scales as $B'/\Delta$ instead of $1/\Delta^2$. Part (c) is the horizon-resolved law: horizon $h$ pays a factor $h$ for fewer updates and
-gains through a larger margin $\Delta_h$ as the shift compounds along the rollout. Section~\ref{sec:exp-horizon} tests the resulting prediction $h(\log(H/\alpha)+\log m)/D^\star_h$ with $D^\star_h=\sup_\lambda\E\log(1+\lambda Z)$.
+The proof is in Appendix~\ref{app:delay}. When the first term of \eqref{eq:N} dominates and the variance term is the larger one ($v\gg w\Delta$), $N\approx16\,v\log(m/\alpha)/\Delta^2$, which is within a constant factor of the Lorden--Lai rate $2\sigma^2\log(1/\alpha)/\Delta^2$ for a Gaussian-like pair with the same mean shift and variance \citep{lorden1971,lai1998information} (the comparison is of a $1-\delta$ quantile with an expected delay, so it is a statement about order, not about constants; the second term of \eqref{eq:N} dominates for $\delta\lesssim0.2$). The bound is loose in practice: on the simulator of Section~\ref{sec:exp-horizon} it gives $N$ in the thousands for horizon one against a measured delay near $500$. When the
+bet saturates ($v\lesssim w\Delta$) the delay scales as $w/\Delta$ instead of $1/\Delta^2$. Part (c) is the horizon-resolved law: horizon $h$ pays a factor $h$ for fewer updates and
+gains through a larger margin $\Delta_h$ as the shift compounds along the rollout. Section~\ref{sec:exp-horizon} tests the first-order prediction $h(\log(H/\alpha)+\log m)/D^\star_h$ with $D^\star_h=\sup_\lambda\E\log(1+\lambda Z)$.
 
 \begin{remark}[The e-process alone]
 For the plain e-process $W$ started at $1$, the same argument holds with $\log(m/\alpha)$ replaced by $\log(m/(\alpha W_\tau))$, where $W_\tau$ is the wealth at the changepoint: wealth lost before the change

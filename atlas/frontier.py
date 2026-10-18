@@ -14,7 +14,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from .eprocess import EProcess, BettingCS
+from .eprocess import EProcess
+from .cs import AvgCondMeanCS
 
 __all__ = ["FaithfulnessFrontier", "amplification", "trust_horizon_from_gap"]
 
@@ -33,7 +34,7 @@ def trust_horizon_from_gap(delta1, gamma, budget, R_max=1.0, phi=np.sqrt,
     """Theorem-2 trust horizon: largest ``h`` with ``C(h) phi(delta1) <= budget``.
 
     This is the anytime-valid simulation lemma turned into a controller: given the
-    certified one-step gap ``delta1`` (the upper edge of the BettingCS), a planner
+    certified one-step gap ``delta1`` (the upper bound of the AvgCondMeanCS), a planner
     may legally imagine up to this horizon while keeping the certified value gap
     within ``budget``. As ``delta1`` jumps at a dynamics shift, the trust horizon
     collapses.
@@ -62,7 +63,7 @@ class FaithfulnessFrontier:
         If True (default) each horizon runs at ``alpha/len(horizons)`` so the whole
         frontier is valid simultaneously (Theorem 1, simultaneous form).
     track_cs : bool
-        If True, also maintain a :class:`BettingCS` per horizon for the
+        If True, also maintain a :class:`AvgCondMeanCS` per horizon for the
         anytime-valid one-step-gap bound (Theorem 2 feeds off horizon 1).
     """
 
@@ -84,7 +85,7 @@ class FaithfulnessFrontier:
         self.track_cs = track_cs
         if track_cs:
             self.cs = {
-                h: BettingCS(z_lo, z_hi, alpha=self.per_alpha)
+                h: AvgCondMeanCS(z_lo, z_hi, alpha=self.per_alpha)
                 for h in self.horizons
             }
         self.t = 0

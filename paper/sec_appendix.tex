@@ -7,16 +7,16 @@ $\PR(T\le n)/\alpha\le\E[T]$. Letting $n\to\infty$, either $\PR(T<\infty)<1$ and
 \paragraph{(b) Delay.} Condition on $\Fcal_\tau$. For every $j$, $R^{(j)}_{\tau+n}\ge\prod_{k=\tau+1}^{\tau+n}e^{(j)}_k$ because the
 recursion contains the term started at $\tau{+}1$ with weight one, so $R_{\tau+n}\ge\nu_j\prod_{k=\tau+1}^{\tau+n}e^{(j)}_k$ with $\nu_j=1/m$.
 
-Take $\lambda\le\lambda^\star=\min\{\Delta/(2v),1/(2B')\}$ on the grid, so $\lambda|X_k|\le\frac12$ and $\log(1+x)\ge x-x^2$ for $x\ge-\frac12$ gives
+Take $\lambda\le\lambda^\star=\min\{\Delta/(2v),1/(2w)\}$ on the grid, so $\lambda|X_k|\le\frac12$ and $\log(1+x)\ge x-x^2$ for $x\ge-\frac12$ gives
 $\log e_k\ge Y_k\defeq\lambda X_k-\lambda^2X_k^2$. Then $\E[Y_k\mid\Fcal_{k-1}]\ge\lambda\Delta-\lambda^2v\ge\lambda\Delta/2$ since $\lambda v\le\Delta/2$.
-Let $D_k=Y_k-\E[Y_k\mid\Fcal_{k-1}]$. Because $|Y_k|\le\lambda B'+\lambda^2B'^2\le1.5\lambda B'$, $|D_k|\le3\lambda B'$. Because $Y_k^2\le2\lambda^2X_k^2(1+\lambda^2X_k^2)\le2.5\lambda^2X_k^2$,
+Let $D_k=Y_k-\E[Y_k\mid\Fcal_{k-1}]$. Because $|Y_k|\le\lambda w+\lambda^2w^2\le1.5\lambda w$, $|D_k|\le3\lambda w$. Because $Y_k^2\le2\lambda^2X_k^2(1+\lambda^2X_k^2)\le2.5\lambda^2X_k^2$,
 $\mathrm{Var}(D_k\mid\Fcal_{k-1})\le2.5\lambda^2v$. Freedman's inequality \citep{freedman1975tail} for the lower tail with $s=n\lambda\Delta/4$ gives
 \[
-\PR\Big(\sum_{k=\tau+1}^{\tau+n}D_k\le-s\ \Big|\ \Fcal_\tau\Big)\le\exp\Big(-\frac{s^2}{2(2.5n\lambda^2v+3\lambda B's/3)}\Big)=\exp\Big(-\frac{n\Delta^2}{80v+8B'\Delta}\Big).
+\PR\Big(\sum_{k=\tau+1}^{\tau+n}D_k\le-s\ \Big|\ \Fcal_\tau\Big)\le\exp\Big(-\frac{s^2}{2(2.5n\lambda^2v+3\lambda ws/3)}\Big)=\exp\Big(-\frac{n\Delta^2}{80v+8w\Delta}\Big).
 \]
-This is at most $\delta$ when $n\ge(80v+8B'\Delta)\log(1/\delta)/\Delta^2$. On the complement, $\sum_kY_k\ge n\lambda\Delta/2-n\lambda\Delta/4=n\lambda\Delta/4$.
+This is at most $\delta$ when $n\ge(80v+8w\Delta)\log(1/\delta)/\Delta^2$. On the complement, $\sum_kY_k\ge n\lambda\Delta/2-n\lambda\Delta/4=n\lambda\Delta/4$.
 
-The linear grid contains $\lambda_j=j/(mB')\in(\lambda^\star/2,\lambda^\star]$ with $j=\lfloor\lambda^\star mB'\rfloor\ge1$, which holds because $\lambda^\star\ge1/(mB')$ under $\Delta\ge2v/(mB')$ and $m\ge2$.
+The linear grid contains $\lambda_j=j/(mw)\in(\lambda^\star/2,\lambda^\star]$ with $j=\lfloor\lambda^\star mw\rfloor\ge1$, which holds because $\lambda^\star\ge1/(mw)$ under $\Delta\ge2v/(mw)$ and $m\ge2$.
 With $\lambda=\lambda_j$, on the good event $\log R_{\tau+n}\ge n\lambda_j\Delta/4-\log m\ge n\lambda^\star\Delta/8-\log m$, which is at least $\log(1/\alpha)$ when $n\ge8\log(m/\alpha)/(\lambda^\star\Delta)$. Hence $T\le\tau+n$.
 
 \paragraph{(c)} Horizon $h$ updates once per $h$ rounds on a chain; apply (b) to the chain with its margin and second moment, and add at most $h$ rounds for the position of the changepoint within a chain step. \hfill$\square$

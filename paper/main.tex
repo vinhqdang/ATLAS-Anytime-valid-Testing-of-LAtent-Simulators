@@ -60,11 +60,10 @@ the second, the \emph{certified horizon}, controls the opposite error, trusting 
 has drifted, which is what a planner gating its imagination depth needs. We prove time-uniform
 validity, a corrected confidence sequence for the running average of conditional means with a
 simulation-lemma-style consequence for per-horizon total variation, and a finite-sample detection
-delay bound with a horizon-resolved growth rate. On a simulator with known ground truth the delay law predicts measured delays within $16\%$ across horizons and the
-certified bound is never violated. On a closed-loop stream where a model-based planner steers the state, CUSUM and a conformal martingale monitoring raw prediction error
+delay bound with a horizon-resolved growth rate. On a simulator with known ground truth a first-order delay law predicts measured delays within $20\%$ across horizons and the
+certified bound is never violated at the checkpoints tested. On a closed-loop stream where a model-based planner steers the state, CUSUM and a conformal martingale monitoring raw prediction error
 alarm in every run when the planner heads for high-noise states, and every raw-error monitor reaches false-alarm rates of $0.40$--$0.73$ under a monitor-aware planner, while ATLAS stays at or below $0.013$.
-On three real video shifts, replicated over 30 random splits and compared with standard change detectors on identical streams, ATLAS detects every shift but needs a tolerance margin
-to keep false alarms near the nominal level. We also report negative results: pooling overlapping horizon chains does not recover the data they discard, and calibrating the tolerance on pooled data voids the conditional guarantee.
+On three real video shifts, replicated over 30 random splits and compared with standard change detectors on identical streams, ATLAS detects every shift with a zero tolerance margin but with false alarms of $0.43$--$0.50$; margins that bring false alarms near the nominal level cost detection on the KTH shifts (down to $0.33$--$0.70$). We also report negative results: pooling overlapping horizon chains does not recover the data they discard, and calibrating the tolerance on pooled data voids the conditional guarantee.
 \end{abstract}
 
 \input{sec_intro}

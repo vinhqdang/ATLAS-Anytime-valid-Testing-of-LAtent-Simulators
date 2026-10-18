@@ -10,9 +10,7 @@ predictive distribution
 P^M_{t,h}\defeq P^M\!\big(\,\cdot\mid x_t,\,a_{t:t+h-1}\big)\in\Delta(\Ycal)
 \end{equation}
 over a target space $\Ycal$ (observations, states, or a learned embedding). Reality reveals the
-$h$-step outcome $Y^{(h)}_t$ at time $t{+}h$. Let $\Fcal_k$ be the deployment filtration: everything
-observable up to the resolution of the $k$-th prediction of the horizon under consideration, including
-states, actions, planner internals, and previous outcomes. We assume nothing about independence or
+$h$-step outcome $Y^{(h)}_t$ at time $t{+}h$. Let $\Fcal_{k-1}$ be the deployment information available at the issue time $s_k$ of the $k$-th prediction of the horizon under consideration: states, committed actions, planner internals, and all previous outcomes (on a non-overlapping chain, Section~\ref{sec:overlap}, previous predictions are resolved before the next is issued). We assume nothing about independence or
 exchangeability of the stream. A variable is \emph{predictable} if it is $\Fcal_{k-1}$-measurable.
 
 \subsection{Scores, divergence, and the faithfulness null}
@@ -39,8 +37,7 @@ for each horizon, issued at $s_k$ and resolved at $s_k{+}h$, whose conditional m
 The statistic is \emph{calibrated at tolerance $\eps_h$} if
 $\dS(Q_{s_k,h},P^M_{s_k,h})\le\eps_h$ implies $\mu_k\le\eps_h$ (used for the \emph{test}). It is
 \emph{certifiable with constants $(c,\bar\rho)$} if $\dS(Q_{s_k,h},P^M_{s_k,h})\le c\,\mu_k+\bar\rho$ almost
-surely (used for the \emph{certificate}). Both are statements about the clipped statistic that is
-actually computed.
+surely (used for the \emph{certificate}). Certifiability is a statement about the statistic whose conditional mean is bounded; if the computed statistic is clipped at $z_{\mathrm{hi}}$, the clipping lowers the mean and $\bar\rho$ must absorb the difference (negligible in our simulator, where $z_{\mathrm{hi}}=6$ and the neglected tail has probability about $10^{-4}$).
 \end{definition}
 
 \begin{example}[Reference score excess]\label{ex:ref}
@@ -52,7 +49,7 @@ conservative and the certificate loose.
 
 \begin{example}[Standardized Gaussian excess]\label{ex:gauss}
 For a Gaussian predictive $\mathcal N(\mu_M,\Sigma_M)$ take
-$Z_k=\frac1d(y-\mu_M)^\top\Sigma_M^{-1}(y-\mu_M)-1$, clipped to $[-1,z_{\mathrm{hi}}]$. If the true
+$Z_k=\frac1d(y-\mu_M)^\top\Sigma_M^{-1}(y-\mu_M)-1$, clipped to $[-1,z_{\mathrm{hi}}]$. Without clipping, if the true
 conditional law has the same covariance and differs in mean by $m$, then $\mu_k=\frac1d m^\top\Sigma_M^{-1}m$
 and $\dS=\mathrm{KL}=\tfrac d2\mu_k$, so $c=d/2$, $\bar\rho=0$, and $\mu_k=0$ exactly under calibration.
 The conditional mean is \emph{pivotal}: it does not depend on the state or the action. If the covariance
@@ -67,7 +64,6 @@ follow. A reference or threshold calibrated offline, on data the planner did not
 a different distribution from the one met in deployment (Section~\ref{sec:exp-endo} measures how
 much that matters). And a fixed constant tolerance is only meaningful if the statistic's conditional
 mean does not itself depend on where the planner goes. A conditional-mean null constrains one
-expectation given the entire past, so it holds for any predictable planner and betting rule; it
-needs no model of how the planner behaves. What it does not do is guarantee power: a planner may
+expectation given the entire past, so for a horizon-one statistic it holds for any predictable planner and betting rule, with no model of how the planner behaves. For $h>1$ the action sequence $a_{s:s+h-1}$ on which the predictive is conditioned must be committed at issue time (open-loop or a pre-committed plan); if later actions react to intermediate states, the realized-action predictive is not the conditional law and the null can fail for a faithful model. Our endogeneity experiments use $h=1$. What it does not do is guarantee power: a planner may
 drift to states where the same error is hard to detect, which we quantify in
 Section~\ref{sec:exp-endo}.

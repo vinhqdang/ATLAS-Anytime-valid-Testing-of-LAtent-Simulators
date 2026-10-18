@@ -1,8 +1,7 @@
 \section{Discussion}\label{sec:discussion}
 
-\paragraph{What the evidence supports.} Time-uniform false-revocation control held in every setting we tried, including a planner that watches the monitor and a stream whose state distribution is a function of the model. The finite-sample
-delay theory predicts measured delay across horizons to within $16\%$ on a system where the post-change statistic is known. The certified total-variation bound was never violated and was off by a factor of $1.6$ to $3$ after a change. On
-real video the construction detects the shifts we tried, and what decides whether it is also quiet beforehand is the tolerance.
+\paragraph{What the evidence supports.} Time-uniform false-revocation control held in every setting we tried, including a planner that watches the monitor and a stream whose state distribution is a function of the model. A first-order delay law predicts measured delay across horizons to within $20\%$ on a system where the post-change statistic is known (the finite-sample bound of Theorem~\ref{thm:delay} is $9$--$15\times$ loose there). The certified total-variation bound was never violated and was off by a factor of $1.6$ to $3$ after a change. On
+real video the construction detects every shift with a zero margin, at false-alarm rates of $0.43$--$0.50$; with margins that bring false alarms to about $0.03$ detection falls to $0.33$--$0.70$ on two of the three shifts. The tolerance decides the trade-off.
 
 \paragraph{Limitations.}
 \begin{itemize}[leftmargin=1.4em,itemsep=2pt]
@@ -14,6 +13,8 @@ In the simulator, windows of a few hundred rounds certify a gap of the size of o
 \item \emph{Power is not guaranteed under steering.} A planner heading for states where the same error is harder to see delays detection by about $1.5\times$ in our study; we do not bound this in general.
 \item \emph{Transients and ramps.} A cumulative e-process detects sustained changes; a $150$-round pulse was detected in $17\%$ of runs and a ramp is detected late.
 \item \emph{Scope of the real-video evidence.} The replicated real-video study uses a lightweight PCA-plus-linear world model on three shifts. The experiments on learned neural world models (convolutional autoencoder, JEPA-style) on KITTI driving and UZH-FPV drone video were single runs that illustrate the interface and are not replicated; they appear in the supplement of the repository and are not used in any claim above. The benchmark shifts (speed, gait, domain) are large; subtle drifts are the harder and more useful case.
+\item \emph{The certificate is an average over logged rounds.} It can be diluted by a short spike inside its window, and it concerns the logged action sequences rather than a new policy's imagined rollouts. No certificate is run on real data here.
+\item \emph{Multi-step claims need committed actions.} For $h>1$ the validity argument needs the action sequence fixed at issue time; the endogeneity experiments use $h=1$ and a pivotal statistic.
 \item \emph{Planner effects are not measured.} We certify the model; we do not show that clipping imagination depth to $\min(\hstar,\hcert_\tau)$ improves task return, which needs a closed-loop control study.
 \end{itemize}
 

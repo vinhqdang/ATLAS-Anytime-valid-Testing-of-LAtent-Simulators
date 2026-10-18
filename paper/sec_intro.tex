@@ -43,11 +43,10 @@ yet crossed $1/\alpha$, is a monitor: a faithful horizon is revoked with probabi
 $\alpha$ over all time (an error of availability);
 \item the \emph{certified horizon} $\hcert_\tau(t)$, the largest horizon whose confidence-sequence
 bound on total variation is below a budget $\tau$, is a certificate: with probability at least
-$1-\alpha$, no horizon the planner is allowed to use ever has true discrepancy above $\tau$ (an error
-of safety).
+$1-\alpha$, every horizon the planner is allowed to use has window-average discrepancy at most $\tau$ (an error of safety).
 \end{itemize}
 
-A planner that clips its imagination depth to $\min(\hstar,\hcert_\tau)$ inherits both guarantees.
+A planner that clips its imagination depth to $\min(\hstar,\hcert_\tau)$ inherits both guarantees, jointly with probability at least $1-2\alpha$ (the certificate is an average over a window of logged rounds, see Theorem~\ref{thm:cert}).
 The two must not be conflated: a bound on false revocations says nothing about trusting an
 unfaithful horizon.
 

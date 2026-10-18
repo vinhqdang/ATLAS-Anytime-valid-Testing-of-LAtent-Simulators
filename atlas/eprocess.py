@@ -135,7 +135,10 @@ class EProcess:
 
 
 class BettingCS:
-    """Two-sided anytime-valid confidence sequence for the mean of a bounded stream.
+    """NOTE: valid only for a *constant* mean; use ``atlas.cs.AvgCondMeanCS`` to certify the
+    running average of conditional means (the simulation-lemma object).
+
+    Two-sided anytime-valid confidence sequence for the mean of a bounded stream.
 
     Maintains, over a grid of candidate means ``m in [z_lo, z_hi]``, two capital
     processes per grid point:
