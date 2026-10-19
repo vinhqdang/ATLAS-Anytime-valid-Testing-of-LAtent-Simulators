@@ -11,7 +11,7 @@ Controllers (all use the same model and planner):
   ATLAS-gated    L = h*(t) from the revocation frontier over horizons {1,2,4,8,16};
                  h* <= 1 triggers the safe fallback (zero action, "brake")
   CUSUM-gated    L = 16 until a CUSUM on the one-step standardised residual alarms, then brake
-  oracle         L = 16 until the true fault onset, then brake (upper bound for a gate)
+  oracle         L = 16 until the true fault onset, then brake (aborting mid-block)
   brake          the safe fallback all episode (reference)
 
 Tolerances and CUSUM thresholds are calibrated on separate nominal closed-loop episodes.
@@ -43,10 +43,11 @@ ALPHA = 0.05
 Z_LO, Z_HI = -1.0, 8.0
 N_SEEDS = int(os.environ.get("N_SEEDS", 20))
 N_CAL = int(os.environ.get("N_CAL", 12))
-K_LIST = [0.25, 0.5, 1.0, 2.0]                # tolerance margins (sd units); 1.0 is the pre-set default
+K_LIST = [0.0, 0.25, 0.5, 1.0, 2.0]                # tolerance margins (sd units); 1.0 is the pre-set default
 K_MAIN = 1.0
 CONTROLLERS = (["fixed-4", "fixed-16"] + [f"ATLAS-gated k={k}" for k in K_LIST]
-               + ["CUSUM-gated", "oracle", "brake"])
+               + ["ATLAS-brake k=0.5", "ATLAS-brake k=1.0", "CUSUM-gated", "oracle", "brake"])
+N_NULL = int(os.environ.get("N_NULL", 100))      # fault-free episodes for the false-trigger study
 
 _MODELS = {}
 
@@ -91,7 +92,7 @@ def run_episode(ctrl, fault, wm, seed, eps=None, cusum=None, collect=False):
             L = LMAX
             if braking:
                 L = 1
-        elif ctrl.startswith("ATLAS-gated"):
+        elif ctrl.startswith("ATLAS-gated") or ctrl.startswith("ATLAS-brake"):
             h_star = 0
             for h in LADDER:
                 if frontier[h].rejected:
@@ -99,7 +100,10 @@ def run_episode(ctrl, fault, wm, seed, eps=None, cusum=None, collect=False):
                 h_star = h
             if h_star <= 1:
                 braking = True
-            L = 1 if braking else min(LMAX, h_star)
+            if ctrl.startswith("ATLAS-brake"):
+                L = 1 if braking else LMAX         # brake-only: never shrink the block
+            else:
+                L = 1 if braking else min(LMAX, h_star)
         else:
             raise KeyError(ctrl)
         if braking:
@@ -109,6 +113,10 @@ def run_episode(ctrl, fault, wm, seed, eps=None, cusum=None, collect=False):
         traj = [s.copy()]
         for i in range(min(L, T - t)):
             f_now = fault if t >= CP else "none"
+            if ctrl == "oracle" and not braking and fault != "none" and t >= CP:
+                braking = True                     # switch exactly at the fault, mid-block
+                alarm = t
+                break
             s_new = env.step(acts[i], f_now)
             costs[t] = stage_cost(s_new, acts[i], t + 1)
             if cus is not None or collect:
@@ -125,16 +133,16 @@ def run_episode(ctrl, fault, wm, seed, eps=None, cusum=None, collect=False):
             # ---- ATLAS: horizon h completes a chain element every h steps of the block;
             # the actions were committed at block start, so each element's predictive is
             # conditioned on actions known at its issue time. The gate is checked every step.
-            if (ctrl.startswith("ATLAS-gated") or collect) and not braking and L > 1:
+            if (ctrl.startswith("ATLAS") or collect) and not braking and L > 1:
                 k = len(traj) - 1                      # steps executed in this block
                 for h in LADDER:
                     if h <= L and k % h == 0:
                         z, _ = predictive_stat(wm, traj[k - h], acts[k - h:k], traj[k], n=200)
                         z = float(np.clip(z, Z_LO, Z_HI))
                         stats[h].append(z)
-                        if ctrl.startswith("ATLAS-gated"):
+                        if ctrl.startswith("ATLAS"):
                             frontier[h].update(z)
-                if ctrl.startswith("ATLAS-gated"):
+                if ctrl.startswith("ATLAS"):
                     h_star = 0
                     for h in LADDER:
                         if frontier[h].rejected:
@@ -200,6 +208,11 @@ def job(args):
     return r
 
 
+def null_job(args):
+    ctrl, seed = args
+    return job((ctrl, "none", seed))["alarm"] is not None
+
+
 def main():
     os.makedirs(RESULTS, exist_ok=True)
     jobs = [(c, f, 500 + sd) for f in FAULTS for sd in range(N_SEEDS) for c in CONTROLLERS]
@@ -229,9 +242,17 @@ def main():
             s = summary[f"{f}|{c}"]
             print(f"{f:<6}{c:<13}{s['pre']:>10.3f}{s['post']:>11.3f}{s['early']:>12.2f}"
                   f"{s['detect']:>8.2f}{(s['delay'] if s['delay'] is not None else float('nan')):>8.1f}")
+    # ---- false triggers over many independent fault-free episodes
+    null = {}
+    gates = [f"ATLAS-gated k={k}" for k in K_LIST] + ["CUSUM-gated"]
+    with Pool(4) as pool:
+        for g in gates:
+            hits = pool.map(null_job, [(g, 70000 + i) for i in range(N_NULL)], chunksize=2)
+            null[g] = float(np.mean(hits))
+            print(f"fault-free false triggers, {g}: {null[g]:.3f} over {N_NULL} episodes")
     with open(os.path.join(RESULTS, "exp10_gated_control.json"), "w") as fh:
-        json.dump(dict(summary=summary, T=T, cp=CP, n_seeds=N_SEEDS, k_main=K_MAIN), fh,
-                  indent=2)
+        json.dump(dict(summary=summary, null=null, n_null=N_NULL, T=T, cp=CP, n_seeds=N_SEEDS,
+                       k_main=K_MAIN), fh, indent=2)
 
 
 if __name__ == "__main__":

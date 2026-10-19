@@ -33,12 +33,12 @@ class NNWorldModel(nn.Module):
         out = self.net(torch.cat([s, a], dim=-1))
         return out[..., :2], out[..., 2:].clamp(-8.0, 1.0)      # d(velocity), log-var
 
-    def step(self, s, a, sample=False):
+    def step(self, s, a, sample=False, gen=None):
         a = a.clamp(-A_MAX, A_MAX)
         dv, lv = self(s, a)
         v = s[..., 2:] + dv
         if sample:
-            v = v + torch.exp(0.5 * lv) * torch.randn_like(v)
+            v = v + torch.exp(0.5 * lv) * torch.randn(v.shape, generator=gen)
         p = s[..., :2] + DT * s[..., 2:]
         return torch.cat([p, v], dim=-1)
 
@@ -101,15 +101,21 @@ def plan(wm, s0, t0, L, iters=25, lr=0.25, prev=None):
     return (torch.tanh(u) * A_MAX).detach().numpy()
 
 
+_CALLS = [0]
+
+
 @torch.no_grad()
-def predictive_stat(wm, s0, actions, y, n=200, rng_seed=0):
+def predictive_stat(wm, s0, actions, y, n=200, rng_seed=None):
     """Standardised excess of the h-step predictive for the committed ``actions`` (h x 2)
     against the realized state ``y``. Returns ``(z, d_eff)``."""
-    torch.manual_seed(rng_seed)
+    # fresh, independent Monte Carlo noise for every chain element
+    _CALLS[0] += 1
+    gen = torch.Generator().manual_seed(int(rng_seed) if rng_seed is not None
+                                        else (np.random.SeedSequence().entropy % (2 ** 62)) + _CALLS[0])
     s = torch.tensor(s0, dtype=torch.float32).expand(n, 4).clone()
     a = torch.tensor(np.asarray(actions), dtype=torch.float32)
     for i in range(len(actions)):
-        s = wm.step(s, a[i].expand(n, 2), sample=True)
+        s = wm.step(s, a[i].expand(n, 2), sample=True, gen=gen)
     x = s.numpy().astype(np.float64)
     mu = x.mean(0)
     cov = np.cov(x.T) + 1e-9 * np.eye(4)

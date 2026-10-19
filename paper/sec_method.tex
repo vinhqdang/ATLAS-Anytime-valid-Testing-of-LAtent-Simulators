@@ -63,12 +63,12 @@ and treat the factor $h$ as the intrinsic price of certifying long horizons dire
 A neural world model rarely has a closed-form multi-step predictive. We take it by sampling: the stochastic model
 (for instance a Gaussian head on the next latent) is rolled forward $n$ times under the action sequence, and the standardized excess of
 Example~\ref{ex:gauss} is computed from the sample mean and covariance on its non-degenerate subspace. Two requirements for validity
-follow from Section~\ref{sec:setup}. First, the action sequence must be fixed at issue time. A planner that replans at every step reacts
+follow from Section~\ref{sec:setup}. First, for $h>1$ the action sequence must be fixed at issue time (for $h=1$ the action is already predictable). A planner that replans at every step reacts
 to intermediate noise, so the realized actions are not independent of the outcome and the null can fail even for a faithful model.
 We therefore let the planner \emph{commit} to an open-loop block of length $L$ and replan only at block boundaries; for
 each horizon $h\le L$ the block yields $\lfloor L/h\rfloor$ non-overlapping chain elements, issued at block offsets $0,h,2h,\dots$,
 each conditioned on actions that were known when it was issued. Second, the statistic's conditional mean is tied to the divergence only if the sampled predictive's covariance is
-adequate, which is why the tolerance is calibrated on held-out nominal closed-loop episodes of the same controller (Section~\ref{sec:exp-control}).
+adequate, which is why the tolerance is calibrated on held-out nominal closed-loop episodes of the same controller (Section~\ref{sec:exp-control}). A tolerance estimated from data is not covered by Theorem~\ref{thm:validity}: with it, validity is empirical, and the guarantee is conditional on the estimate being an upper bound on the statistic's conditional mean.
 
 The commit length is the natural place for the gate: the planner runs with $L=\min(L_{\max},\hstar(t))$, checks the frontier after every executed step, and
 aborts the remaining block and enters a safe fallback when $\hstar\le1$ (Algorithm~\ref{alg:atlas}).

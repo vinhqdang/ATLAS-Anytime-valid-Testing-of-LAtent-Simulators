@@ -124,15 +124,22 @@ CONFIG = {
 # ---------------------------------------------------------------- tuning
 
 
-def tune(name, factory, grid, null_streams, L_clips):
-    """Pick the sensitivity whose false-alarm rate over L clips is closest to ALPHA."""
-    best, gap = grid[0], 9
-    for s in grid:
-        fa = np.mean([monitor_alarm(factory(s), z, c) is not None
-                      for z, c in null_streams])
-        if abs(fa - ALPHA) < gap:
-            best, gap = s, abs(fa - ALPHA)
-    return best
+def tune(name, factory, grid, null_streams, L_clips, more_sensitive_is_larger=False):
+    """Most sensitive setting whose false-alarm rate on the tuning streams is at most ALPHA.
+
+    Grids are ordered from least to most sensitive when ``more_sensitive_is_larger`` is True
+    (ADWIN delta, KSWIN alpha) and from most to least sensitive otherwise (CUSUM threshold).
+    If no setting reaches ALPHA, the least sensitive one is returned. Returns
+    ``(sensitivity, achieved FA)``."""
+    order = list(grid) if not more_sensitive_is_larger else list(grid)[::-1]   # most sensitive first
+    last = None
+    for s in order:
+        fa = float(np.mean([monitor_alarm(factory(s), z, c) is not None
+                            for z, c in null_streams]))
+        last = (s, fa)
+        if fa <= ALPHA:
+            return s, fa
+    return last
 
 
 def boot_ci(x, n=2000, seed=0):
@@ -159,8 +166,13 @@ def run(kind):
         results[b] = dict(fa_L=[], fa_3L=[], det=[], delay=[])
 
     # ---- gather repetition data (h=1 raw streams + per-horizon ATLAS streams)
+    import pickle
+    cache = os.path.join(RESULTS, f"_cache_{MODEL}_{kind}.pkl")
     reps = []
-    for r in range(REPS * 2):          # first REPS for evaluation, next REPS to tune baselines
+    for r in range(REPS * 2):
+        if os.environ.get("USE_CACHE") and os.path.exists(cache):
+            reps = pickle.load(open(cache, "rb"))
+            break          # first REPS for evaluation, next REPS to tune baselines
         rng = np.random.default_rng(1000 + r)
         train, cal, dep_id, dep_od = split(rng)
         if MODEL == "neural":
@@ -187,20 +199,30 @@ def run(kind):
         print(f"  rep {r+1}/{2*REPS}", end="\r")
     print()
 
+    import pickle
+    tag = f"{MODEL}_{kind}"
+    with open(os.path.join(RESULTS, f"_cache_{tag}.pkl"), "wb") as fh:
+        pickle.dump(reps, fh)
+
     # ---- tune baselines on the second half (null streams only)
     ref = np.concatenate([rp["s_cal1"][0] for rp in reps[REPS:]])
     m0, sd0 = float(ref.mean()), float(ref.std())
     factories = {
-        "CUSUM": (lambda s: CUSUM(m0, 0.25 * sd0, s), np.linspace(0.5, 60, 24)),
+        "CUSUM": (lambda s: CUSUM(m0, 0.25 * sd0, s), np.geomspace(0.5, 3000, 40)),
         "ADWIN": (lambda s: ADWIN(delta=s), np.logspace(-14, -0.5, 20)),
         "KSWIN": (lambda s: KSWIN(alpha=s), np.logspace(-30, -1.3, 20)),
         "Conformal MG": (lambda s: ConformalMartingale(ref, alpha=ALPHA), [None]),
     }
-    tuned = {}
+    tuned, tuned_fa = {}, {}
     for name, (fac, grid) in factories.items():
         nulls = [(rp["s_id"][1][0], rp["s_id"][1][1]) for rp in reps[REPS:]]
-        tuned[name] = tune(name, fac, grid, nulls, None) if name != "Conformal MG" else None
-    print("tuned:", {k: (None if v is None else round(float(v), 5)) for k, v in tuned.items()})
+        if name != "Conformal MG":
+            tuned[name], tuned_fa[name] = tune(name, fac, grid, nulls, None,
+                                               more_sensitive_is_larger=(name != "CUSUM"))
+        else:
+            tuned[name], tuned_fa[name] = None, None
+    print("tuned:", {k: (None if v is None else round(float(v), 5)) for k, v in tuned.items()},
+          "achieved FA on tuning reps:", tuned_fa)
 
     # ---- evaluate on the first half
     for rp in reps[:REPS]:
@@ -241,7 +263,8 @@ def run(kind):
     os.makedirs(RESULTS, exist_ok=True)
     with open(os.path.join(RESULTS, f"exp8{ {'neural': 'n', 'jepa': 'j'}.get(MODEL, '') }_{kind}.json"), "w") as f:
         json.dump(dict(reps=REPS, summary=summary,
-                       tuned={k: (None if v is None else float(v)) for k, v in tuned.items()}),
+                       tuned={k: (None if v is None else float(v)) for k, v in tuned.items()},
+                       tuned_fa=tuned_fa),
                   f, indent=2)
 
 

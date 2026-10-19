@@ -85,12 +85,13 @@ paper/                  Manuscript (Neural Networks / elsarticle) and tables
   martingale reach 1.00 when the planner seeks high-noise states); ATLAS stays at or
   below 0.013. Power depends on where the planner steers.
 - **Gated planning.** A planner with a neural dynamics model, gated by the frontier, under
-  three faults: lowest mean post-fault cost for margins k <= 1, no fault-free cost, slower
-  than CUSUM on an abrupt fault.
+  three faults: lowest mean post-fault cost at margins k = 0.25-0.5, no false trigger in 100
+  fault-free episodes; slower than CUSUM on the abrupt fault; braking hurts on the other two.
 - **Real video, replicated.** Moving MNIST speed shift and two KTH shifts, with linear,
   conv-autoencoder and frozen-encoder world models, against CUSUM, ADWIN, KSWIN and a
-  conformal martingale. False-alarm control needs a tolerance margin; the frozen-encoder
-  model reaches 0 false alarms with detection 0.9-1.0 at k = 1.
+  conformal martingale. False-alarm control needs a tolerance margin; a tuned CUSUM is
+  competitive on the linear model; the frozen-encoder model reaches 0 false alarms with
+  detection 0.9-1.0 at k = 1 (10 repetitions).
 - **Negative results.** Pooling overlapping horizon chains does not recover the discarded
   data; a constant tolerance calibrated on pooled data voids the conditional guarantee.
 

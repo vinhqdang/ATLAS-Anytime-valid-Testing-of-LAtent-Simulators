@@ -41,16 +41,20 @@ def control_table():
     p = os.path.join(R, "exp10_gated_control.json")
     if not os.path.exists(p):
         return
-    S = json.load(open(p))["summary"]
+    J = json.load(open(p))
+    S, NULL, NN = J["summary"], J["null"], J["n_null"]
     ctrls = [("fixed-4", "fixed horizon 4"), ("fixed-16", "fixed horizon 16 (ungated)"),
+             ("ATLAS-gated k=0.0", "ATLAS gate, $k=0$"),
              ("ATLAS-gated k=0.25", "ATLAS gate, $k=0.25$"), ("ATLAS-gated k=0.5", "ATLAS gate, $k=0.5$"),
              ("ATLAS-gated k=1.0", "ATLAS gate, $k=1$"), ("ATLAS-gated k=2.0", "ATLAS gate, $k=2$"),
-             ("CUSUM-gated", "CUSUM gate"), ("oracle", "oracle gate"), ("brake", "brake always")]
+             ("ATLAS-brake k=0.5", "ATLAS brake-only, $k=0.5$"), ("ATLAS-brake k=1.0", "ATLAS brake-only, $k=1$"),
+             ("CUSUM-gated", "CUSUM gate"), ("oracle", "oracle gate (switches at the fault)"),
+             ("brake", "brake always")]
     faults = [("gain", "gain $\\times0.4$"), ("flip", "$x$-axis flipped"), ("wind", "wind")]
     cap = ("Gated planning with a neural world model. Mean stage cost (lower is better), 20 episodes per "
-           "cell, bootstrap 95\\% intervals in brackets. ``No fault'' is the mean cost over the second half "
-           "of a fault-free episode and ``false trigger'' the fraction of fault-free episodes in which a gate "
-           "fired. Gate controllers switch to the safe fallback (zero action) when they alarm. Cost before the "
+           "cell (five trained models, four episodes each; intervals ignore that clustering), bootstrap 95\\% intervals in brackets. ``No fault'' is the mean cost over the second half "
+           "of a fault-free episode and ``false trigger'' the number of fault-free episodes (out of 100 independent ones) in which a gate "
+           "fired. ``Brake-only'' gates never shorten the block before braking. Gate controllers switch to the safe fallback (zero action) when they alarm. Cost before the "
            "fault is $0.154$ for every long-horizon controller.")
     out = ["\\begin{table}[t]\\centering", "\\caption{" + cap + "}", "\\label{tab:control}",
            "\\small", "\\setlength{\\tabcolsep}{3pt}",
@@ -60,7 +64,7 @@ def control_table():
     for k, lab in ctrls:
         gate = k.startswith(("ATLAS", "CUSUM"))
         r0 = S[f"none|{k}"]
-        ft = f"{r0['early'] + r0['detect']:.2f}" if gate else "---"
+        ft = f"{round(NULL[k] * NN)}/{NN}" if gate and k in NULL else "---"
         cells, vals = [f"{r0['post']:.2f}", ft], []
         for f, _ in faults:
             r = S[f"{f}|{k}"]
@@ -88,7 +92,7 @@ def models_table():
             ("CUSUM", "CUSUM"), ("Conformal MG", "conformal MG")]
     cap = ("Three world-model classes on the same real shifts. Each cell: false-alarm rate over $3L$ in-distribution "
            "clips / detection rate / mean delay in clips (``--'' if never detected); repetitions in parentheses. "
-           "ADWIN and KSWIN, tuned to 5\\% on separate repetitions, almost never detected a shift with the neural models (one exception: ADWIN in 2 of 10 repetitions of the conv.\\ autoencoder on the domain shift) and are omitted.")
+           "CUSUM and the conformal martingale (MG) are tuned as in the text; ADWIN and KSWIN, also tuned, are in the JSON outputs.")
     out = ["\\begin{table}[t]\\centering", "\\caption{" + cap + "}", "\\label{tab:models}", "\\small",
            "\\setlength{\\tabcolsep}{3pt}", "\\begin{tabular}{@{}ll" + "c" * len(cols) + "@{}}", "\\toprule",
            "shift & world model & " + " & ".join(c[1] for c in cols) + " \\\\", "\\midrule"]
