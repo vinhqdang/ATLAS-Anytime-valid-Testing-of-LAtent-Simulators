@@ -9,4 +9,4 @@
 
 Do not resubmit to a venue listed above. Check this table before choosing the next target.
 
-| Neurocomputing | transfer from PR-D-26-10764 | Prepared, to be submitted by the author | Subscription route has no publishing charge |
+| Neurocomputing | transfer from PR-D-26-10764 | Submitted by the author (2026-10-19 or later; date and new reference to be filled in) | Subscription route, no publishing charge. Package: submission/ (manuscript, cover letter, abstract, highlights). Commit 5e7c2f0 and later |
