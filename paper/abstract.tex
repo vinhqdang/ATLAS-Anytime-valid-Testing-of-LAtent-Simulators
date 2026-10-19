@@ -1,0 +1,14 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\setlength{\parindent}{0pt}\setlength{\parskip}{0.8em}
+\pagestyle{empty}
+\begin{document}
+{\large\bfseries ATLAS: Anytime-Valid Monitoring and Certification of Neural World Models}
+
+\textbf{Abstract}
+
+A world model supports planning only while its imagined rollouts stay close to the environment, and that closeness depends on the rollout horizon and changes during deployment. We study sequential monitoring and certification of deployed neural world models with error guarantees that hold uniformly over time and assume nothing about how the planner generates the data. ATLAS bets against the null that each horizon is $\varepsilon$-faithful, giving a \emph{revocation frontier} that controls false alarms, and builds confidence sequences on the faithfulness gap, giving a \emph{certified horizon} that controls the opposite, safety-relevant error. We prove time-uniform validity, a correct confidence sequence for the running average of conditional means with a per-horizon total-variation certificate, and a finite-sample detection-delay bound. On a simulator with known truth, a first-order delay law predicts measured delay within $20\%$ and the certified bound is never violated. When a model-based planner steers the state, CUSUM and a conformal martingale on raw prediction error alarm in every run under one planner, while ATLAS stays at or below $0.013$. Gating a planner built on a neural dynamics model lowers mean post-fault cost over three faults from $34.4$ to $8.2$--$9.4$ at moderate margins with no false trigger in $100$ fault-free episodes, but the mean is dominated by one fault and the gate is slower than CUSUM. On real video, a frozen-encoder model reached zero false alarms with detection $0.9$--$1.0$ at a one-standard-deviation margin, while a small convolutional autoencoder did not. Pooling overlapping horizon chains does not recover discarded data, and a tolerance calibrated on pooled data voids the conditional guarantee.
+
+\textbf{Keywords:} world models; anytime-valid inference; e-processes; sequential testing; model-based reinforcement learning; neural network monitoring; change detection
+\end{document}
