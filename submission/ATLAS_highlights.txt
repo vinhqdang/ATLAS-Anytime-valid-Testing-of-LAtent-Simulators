@@ -1,0 +1,5 @@
+Anytime-valid monitoring of deployed neural world models, resolved by horizon
+Separate guarantees for false alarms (frontier) and for safety (certified horizon)
+Valid on policy-steered streams; raw-error monitors inflate false alarms there
+A drift gate cuts planning cost under actuator faults for a neural dynamics model
+Tolerance calibration decides real-video false alarms; negative results reported
