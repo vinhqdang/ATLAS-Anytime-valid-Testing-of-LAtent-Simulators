@@ -73,7 +73,7 @@ experiments/
   gpu/                  Neural world-model monitors (single illustrative runs)
 tests/                  Ville control, CS coverage (time-varying means), power, scores
 results/                JSON outputs and figures of the simulator experiments
-paper/                  Manuscript (Neural Networks / elsarticle) and tables
+paper/                  Manuscript (Neurocomputing / elsarticle) and tables
 ```
 
 ## Results (see paper/ for the full account)

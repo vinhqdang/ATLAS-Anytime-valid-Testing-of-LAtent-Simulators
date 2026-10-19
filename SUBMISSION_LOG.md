@@ -8,3 +8,5 @@
 | Autonomous Robots | -- | Unknown (a Springer-format version exists in git history, commit 37bfe16) | To be confirmed |
 
 Do not resubmit to a venue listed above. Check this table before choosing the next target.
+
+| Neurocomputing | transfer from PR-D-26-10764 | Prepared, to be submitted by the author | Subscription route has no publishing charge |
