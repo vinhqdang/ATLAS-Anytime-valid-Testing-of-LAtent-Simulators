@@ -36,6 +36,7 @@ ALPHA = 0.05
 Z_LO, Z_HI = -1.0, 8.0
 LAMS = lam_grid(Z_LO, Z_HI, 20)
 REPS = int(os.environ.get("REPS", 30))
+MODEL = os.environ.get("MODEL", "linear")          # "linear" (PCA + linear) or "neural"
 EPS_MULTS = [0.0, 0.25, 0.5, 1.0]
 
 
@@ -162,7 +163,18 @@ def run(kind):
     for r in range(REPS * 2):          # first REPS for evaluation, next REPS to tune baselines
         rng = np.random.default_rng(1000 + r)
         train, cal, dep_id, dep_od = split(rng)
-        wm = LatentLinearWM(latent_dim=latent).fit(train)
+        if MODEL == "neural":
+            from experiments.gpu.neural_wm import NeuralLatentWM
+            wm = NeuralLatentWM(latent_dim=latent, img_size=32, epochs_ae=6, epochs_dyn=8,
+                                seed=r).fit(train, horizons=horizons)
+            wm.recalibrate(cal, horizons)
+        elif MODEL == "jepa":
+            from experiments.gpu.jepa_wm import JEPALatentWM
+            wm = JEPALatentWM(latent_dim=latent, epochs_dyn=25, seed=r).fit(
+                train, horizons=horizons)
+            wm.recalibrate(cal, horizons)
+        else:
+            wm = LatentLinearWM(latent_dim=latent).fit(train)
         cal_ex = wm.raw_excess(cal, horizons, B=Z_HI)
         s_id = clip_streams(wm, dep_id, horizons)
         s_od = clip_streams(wm, dep_od, horizons)
@@ -227,7 +239,7 @@ def run(kind):
         print(f"{m:<20}{f(row['fa_L']):>16}{f(row['fa_3L']):>16}{f(row['det']):>16}"
               f"{row['delay'][0]:>10.1f} [{row['delay'][1]:.1f},{row['delay'][2]:.1f}]")
     os.makedirs(RESULTS, exist_ok=True)
-    with open(os.path.join(RESULTS, f"exp8_{kind}.json"), "w") as f:
+    with open(os.path.join(RESULTS, f"exp8{ {'neural': 'n', 'jepa': 'j'}.get(MODEL, '') }_{kind}.json"), "w") as f:
         json.dump(dict(reps=REPS, summary=summary,
                        tuned={k: (None if v is None else float(v)) for k, v in tuned.items()}),
                   f, indent=2)

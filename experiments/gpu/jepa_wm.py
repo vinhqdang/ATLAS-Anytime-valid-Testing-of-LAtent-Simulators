@@ -36,6 +36,8 @@ class _Dyn(nn.Module):
 
 
 class JEPALatentWM:
+    _CACHE = {}                           # frozen-encoder features per clip object
+
     def __init__(self, latent_dim=32, epochs_dyn=40, batch=128, lr=1e-3, seed=0):
         self.d = latent_dim
         self.epochs_dyn = epochs_dyn
@@ -62,6 +64,16 @@ class JEPALatentWM:
     # ------------------------------------------------------------ features
     @torch.no_grad()
     def _feats(self, seq):
+        cache = JEPALatentWM._CACHE
+        key = id(seq)
+        if key in cache:
+            return cache[key][1]
+        out = self._feats_uncached(seq)
+        cache[key] = (seq, out)          # keep ``seq`` alive so ids are not reused
+        return out
+
+    @torch.no_grad()
+    def _feats_uncached(self, seq):
         x = torch.tensor(seq, dtype=torch.float32, device=self.dev)      # (T,H,W)
         x = x.unsqueeze(1).repeat(1, 3, 1, 1)                            # gray->3ch
         x = torch.nn.functional.interpolate(x, size=96, mode="bilinear",
