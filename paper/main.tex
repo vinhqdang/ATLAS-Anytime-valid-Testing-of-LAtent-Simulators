@@ -1,5 +1,4 @@
-\documentclass[10pt]{article}
-\usepackage{tmlr}
+\documentclass[preprint,12pt,authoryear]{elsarticle}
 
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{bm}
@@ -14,6 +13,7 @@
 \usepackage{subcaption}
 \usepackage{microtype}
 \usepackage{hyperref}
+\usepackage[a4paper,margin=2.5cm]{geometry}
 
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}
@@ -39,32 +39,36 @@
 \newcommand{\TV}{\mathrm{TV}}
 \newcommand{\defeq}{\vcentcolon=}
 
-\title{ATLAS: Anytime-Valid Certification of World-Model Faithfulness by Betting}
-
-\author{}
+\journal{Neural Networks}
 
 \begin{document}
-\maketitle
+
+\begin{frontmatter}
+
+\title{ATLAS: Anytime-Valid Monitoring and Certification of Neural World Models}
+
+\author[buv]{Quang-Vinh Dang\corref{cor1}}
+\ead{vinh.dq4@buv.edu.vn}
+\cortext[cor1]{Corresponding author. ORCID: 0000-0002-3877-8024}
+\affiliation[buv]{organization={British University Vietnam}, city={Hung Yen}, country={Vietnam}}
 
 \begin{abstract}
-A world model is useful only while its imagined rollouts stay close to what the environment
-would have done, and that closeness depends on the rollout horizon and changes during deployment.
-Offline scores such as Fr\'echet Video Distance or held-out return gaps are computed once and
-cannot follow either effect. We study how to monitor and certify a deployed world model
-sequentially, with error guarantees that hold uniformly over time and that remain valid when
-the planner's own actions, chosen through the model, determine which states the monitor sees.
-ATLAS bets against the null ``horizon $h$ is $\eps$-faithful'' with a test martingale for each
-horizon, and uses the same betting machinery in estimation mode to produce confidence sequences
-on the faithfulness gap. The first object, the \emph{revocation frontier}, controls false alarms;
-the second, the \emph{certified horizon}, controls the opposite error, trusting a horizon that
-has drifted, which is what a planner gating its imagination depth needs. We prove time-uniform
-validity, a corrected confidence sequence for the running average of conditional means with a
-simulation-lemma-style consequence for per-horizon total variation, and a finite-sample detection
-delay bound with a horizon-resolved growth rate. On a simulator with known ground truth a first-order delay law predicts measured delays within $20\%$ across horizons and the
-certified bound is never violated at the checkpoints tested. On a closed-loop stream where a model-based planner steers the state, CUSUM and a conformal martingale monitoring raw prediction error
-alarm in every run when the planner heads for high-noise states, and every raw-error monitor reaches false-alarm rates of $0.40$--$0.73$ under a monitor-aware planner, while ATLAS stays at or below $0.013$.
-On three real video shifts, replicated over 30 random splits and compared with standard change detectors on identical streams, ATLAS detects every shift with a zero tolerance margin but with false alarms of $0.43$--$0.50$; margins that bring false alarms near the nominal level cost detection on the KTH shifts (down to $0.33$--$0.70$). We also report negative results: pooling overlapping horizon chains does not recover the data they discard, and calibrating the tolerance on pooled data voids the conditional guarantee.
+A world model supports planning only while its imagined rollouts stay close to what the environment would do, and that closeness depends on the rollout horizon and changes during deployment. Offline scores are computed once and follow neither effect. We study sequential monitoring and certification of deployed neural world models with error guarantees that hold uniformly over time and need no assumption on how the planner generates the data. ATLAS runs a betting test martingale for each horizon against the null that the horizon is $\varepsilon$-faithful, giving a \emph{revocation frontier} that controls false alarms, and a confidence sequence on the faithfulness gap, giving a \emph{certified horizon} that controls the opposite, safety-relevant error. We prove time-uniform validity, a correct confidence sequence for the running average of conditional means with a per-horizon total-variation certificate, and a finite-sample detection-delay bound. On a simulator with known truth, a first-order delay law predicts measured delay within $20\%$ and the certified bound is never violated. On a closed-loop stream steered by a model-based planner, CUSUM and a conformal martingale on raw prediction error alarm in every run while ATLAS stays at or below $0.013$. Gating a planner built on a neural dynamics model with ATLAS lowers the mean post-fault cost over three faults from $34.4$ to $8.2$--$13.9$ with no cost in fault-free operation, though it reacts more slowly than CUSUM. On real video, a frozen-encoder model reaches zero false alarms and $0.9$--$1.0$ detection at a tolerance margin of one standard deviation, while a small convolutional autoencoder does not. Two negative results: pooling overlapping horizon chains does not recover the data they discard, and a tolerance calibrated on pooled data voids the conditional guarantee.
 \end{abstract}
+
+\begin{highlights}
+\item Anytime-valid monitoring of deployed neural world models, resolved by horizon
+\item Separate guarantees for false alarms (frontier) and for safety (certified horizon)
+\item Valid on policy-steered streams; raw-error monitors inflate false alarms there
+\item A drift gate cuts planning cost under actuator faults for a neural dynamics model
+\item Tolerance calibration decides real-video false alarms; negative results reported
+\end{highlights}
+
+\begin{keyword}
+world models \sep anytime-valid inference \sep e-processes \sep sequential testing \sep model-based reinforcement learning \sep neural network monitoring \sep change detection
+\end{keyword}
+
+\end{frontmatter}
 
 \input{sec_intro}
 \input{sec_setup}
@@ -73,10 +77,12 @@ On three real video shifts, replicated over 30 random splits and compared with s
 \input{sec_experiments}
 \input{sec_discussion}
 
-\bibliographystyle{tmlr}
-\bibliography{references}
-
 \appendix
 \input{sec_appendix}
+
+\input{sec_declarations}
+
+\bibliographystyle{elsarticle-harv}
+\bibliography{references}
 
 \end{document}

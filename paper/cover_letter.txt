@@ -1,0 +1,18 @@
+Dear Editor,
+
+Please consider the enclosed manuscript, "ATLAS: Anytime-Valid Monitoring and Certification of Neural World Models", for publication in Neural Networks. It is transferred from Pattern Recognition (Ms. Ref. No. PR-D-26-10764), where it was declined for limited novelty and insufficiently convincing experiments. The version submitted here is substantially revised in response, and I describe the changes so that you can judge them.
+
+What the paper does. A neural world model is useful only while its imagined rollouts stay close to the environment, and that depends on the rollout horizon and drifts during deployment. The paper gives sequential procedures with error guarantees that hold uniformly over time and need no assumption on how the planner generates the data: a revocation frontier (betting test martingales per horizon) that controls false alarms, and a certified horizon (confidence sequences) that controls the opposite, safety-relevant error.
+
+What changed since the earlier submission.
+1. Positioning. The related work now includes sequential forecast evaluation with e-values, and the paper no longer claims a new inference principle; its contributions are the formalization for deployed neural world models, the multi-step analysis, and the evidence.
+2. Corrections. The earlier confidence-sequence lemma only covered a constant mean; it is replaced by a bound on the running average of conditional means with a windowed form. The delay result is now a finite-sample bound. The earlier claim that the frontier protects a planner from trusting an unfaithful horizon is corrected: that is the role of the certified horizon.
+3. Experiments. New: a closed-loop study in which a model-based planner steers the data stream; a controlled study in which a planner with a neural dynamics model is gated by the frontier under three faults; replicated real-video experiments (10 to 30 random splits) with a linear, a convolutional-autoencoder, and a frozen-encoder world model, compared with CUSUM, ADWIN, KSWIN and a conformal martingale on identical streams; and ablations.
+4. Negative results are reported: pooling overlapping horizon chains does not recover the data they discard; a tolerance calibrated on pooled data voids the conditional guarantee; the gate is slower than CUSUM on an abrupt fault; a weak convolutional autoencoder cannot be repaired by any tolerance margin.
+
+The manuscript is original, is not under consideration elsewhere, and I am the sole author. Code and experiment outputs are public at https://github.com/vinhqdang/ATLAS-Anytime-valid-Testing-of-LAtent-Simulators.
+
+Sincerely,
+Quang-Vinh Dang
+British University Vietnam, Hung Yen, Vietnam
+vinh.dq4@buv.edu.vn  |  ORCID 0000-0002-3877-8024

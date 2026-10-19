@@ -1,10 +1,11 @@
 \section{Experiments}\label{sec:experiments}
 
-The study has four parts. A simulator with known ground truth checks each guarantee against the truth (Section~\ref{sec:exp-synth}), including
+The study has five parts. A simulator with known ground truth checks each guarantee against the truth (Section~\ref{sec:exp-synth}), including
 the horizon-resolved delay law (Section~\ref{sec:exp-horizon}). A closed-loop stream in which a model-based planner steers the state tests the endogeneity claim
-(Section~\ref{sec:exp-endo}). Replicated real-video experiments compare ATLAS with standard monitors on identical streams (Sections~\ref{sec:exp-real}--\ref{sec:exp-baselines}).
+(Section~\ref{sec:exp-endo}). A controlled study with a neural dynamics model asks whether gating the planner with ATLAS improves control (Section~\ref{sec:exp-control}).
+Replicated real-video experiments with three world-model classes compare ATLAS with standard monitors on identical streams (Sections~\ref{sec:exp-real}--\ref{sec:exp-baselines}).
 Ablations, including the cases where design choices fail, close the section (Section~\ref{sec:exp-abl}). Unless stated, $\alpha=0.05$, the bet is a mixture over 20 values, and
-horizons are run on non-overlapping chains at level $\alpha/H$. Code and per-experiment JSON outputs are in the supplementary material.
+horizons are run on non-overlapping chains at level $\alpha/H$. Code and per-experiment JSON outputs are in the repository.
 
 \subsection{Ground-truth validation}\label{sec:exp-synth}
 
@@ -139,6 +140,22 @@ measures for one family of planners and does not bound in general.
 \label{fig:endo}
 \end{figure}
 
+\subsection{Gated planning with a neural world model}\label{sec:exp-control}
+
+The previous experiments certify a model; this one asks whether the certificate improves control. A damped point mass with quadratic drag must track a target on a circle. A heteroskedastic MLP
+(next velocity as a Gaussian, positions by known kinematics) is trained on random-action transitions of the nominal system only, and a gradient-based planner through its mean dynamics commits to action blocks of length $L$.
+Long horizons matter in this task: the nominal tracking cost falls from $0.75$ at a committed horizon of $4$ to $0.15$ at $16$. Halfway through each 400-step episode a fault changes the true dynamics while the model keeps its nominal behavior:
+the actuator gain drops to $0.4$ (\emph{gain}), the $x$-action changes sign (\emph{flip}), or a constant force pushes along $x$ (\emph{wind}).
+Controllers share the model and the planner: fixed horizons $4$ and $16$ without a gate; the ATLAS gate of Section~\ref{sec:neural} with horizons $\{1,2,4,8,16\}$ at tolerance margins $k\in\{0.25,0.5,1,2\}$ (tolerances from 12 separate nominal episodes per model; $k=1$ was the default fixed in advance from the real-video protocol); a CUSUM gate on the one-step standardized residual, tuned to a 5\% false-alarm rate on the same calibration episodes; an oracle gate that brakes at the true fault time; and brake-always. The safe fallback is zero action. There are five trained models and $20$ episodes per cell.
+
+\input{tab_control}
+
+Four observations from Table~\ref{tab:control}. (i) No ATLAS gate ever fired in a fault-free episode, for any margin, and nominal cost is unchanged; the CUSUM gate fired in $5\%$ of fault-free episodes. (ii) The flip fault makes the ungated long-horizon planner diverge (cost $99.2$). The ATLAS gate reduces it to $37.8$ at $k=1$, $21.1$ at $k=0.5$ and $13.3$ at $k=0.25$ (mean alarm delay $70$, $44$ and $29$ steps; $130$ and cost $73.8$ at $k=2$), which is a $62$--$87\%$ reduction for $k\le1$ but well short of the CUSUM gate ($4.7$, delay $4$ steps) and the oracle ($5.5$). ATLAS is slower than CUSUM here because its bounded bets need several informative updates before wealth crosses the threshold.
+(iii) For the \emph{gain} and \emph{wind} faults, braking is the wrong response: the ungated planner stays near cost $1.06$ and $2.80$, but braking costs $4.4$ and $92.8$. CUSUM and the oracle gate brake on any change and are far worse on wind ($64.6$ and $66.6$). The ATLAS gate at $k\ge1$ does not fire for these faults ($0$ of $20$ episodes), at $k=0.5$ it fires in $10$--$20\%$ of them, and at $k=0.25$ in $80$--$90\%$, paying for it (gain $1.40$, wind $9.74$).
+(iv) Averaged over the three faults, the ATLAS gate has the lowest cost for $k\le1$ ($8.2$, $8.8$, $13.9$) against $34.4$ ungated, $24.2$ for CUSUM and $25.2$ for the oracle.
+
+The reading of this table must be careful. The ranking depends on the fault suite and on the fallback: zero action is right for a mis-wired actuator and wrong under a persistent disturbance, and no fault-agnostic fallback exists in this system. The margin $k$ trades responsiveness against needless fallbacks, and it is a statistical tolerance on the model's predictive accuracy rather than a bound on task cost, so a gate can ignore a fault the task would have wanted noticed and react to one it would have tolerated. What the experiment does show is narrower: with no per-fault tuning, a tolerance-based anytime-valid gate can avoid the catastrophic outcome of an unfaithful long-horizon model at no nominal cost, whereas a gate that reacts to any change pays for false and unnecessary triggers.
+
 \subsection{Real video: replicated protocol}\label{sec:exp-real}
 
 Three real shifts are studied with a PCA-plus-linear-dynamics latent world model: Moving MNIST \citep{srivastava2015movingmnist} native speed to double speed, KTH \citep{schuldt2004kth} walking to running, and KTH walking outdoors to indoors. Each
@@ -154,6 +171,10 @@ $k=1$ brings it to $0.03$ while detection drops to $0.70$; on the subtler outdoo
 a guarantee, because the tolerance is estimated. The competing monitors fare worse on false alarms on these real streams: the conformal martingale alarms in $0.43$--$0.70$ of in-distribution repetitions over $L$ clips (exchangeability fails across the temporal and subject structure of the stream), CUSUM in $0.97$ on KTH walking$\to$running, and
 ADWIN and KSWIN, tuned to $5\%$ on separate repetitions, either miss the shift entirely (Moving MNIST, KTH walking$\to$running) or detect it in $5$--$6$ clips (domain shift). Tuning a sensitivity to a target false-alarm rate on a limited number of
 streams is itself unstable, which is the practical case for a method whose false-alarm control does not rely on it. We read the table as evidence that the construction is usable on real video when the tolerance is set with a margin and validated, not as evidence that false-alarm control transfers automatically.
+
+\paragraph{World-model classes.} Table~\ref{tab:models} repeats the protocol with two neural world models (10 repetitions each): a convolutional autoencoder with a learned latent dynamics network, and a JEPA-style model with a frozen ImageNet ResNet-18 encoder, PCA-reduced, plus a learned latent dynamics network. The predictive covariance of both is re-estimated on held-out calibration clips. The result depends strongly on the model. The frozen-encoder model is quiet and fast at $k=1$ (zero false alarms over $3L$ clips on both KTH shifts, detection $1.00$ and $0.90$, delay $3.0$ and $8.3$ clips), better than the linear model on the same shifts at the same margin (detection $0.70$ and $0.33$). The small convolutional autoencoder is not usable on KTH walking$\to$running: it overfits the training subjects, its in-distribution statistic is non-stationary across subjects, and false alarms stay at $0.40$ over $3L$ clips for every margin while detection falls from $0.70$ to $0.40$ (on the domain shift its false alarms are $0.10$--$0.20$ but it detects only $0.30$--$0.80$). On Moving MNIST it is conservative (no false alarms with $k\ge0.25$ but delay near $50$ clips, against $5$ for the linear model). A certificate is only as good as the representation under it; ATLAS does not repair a weak world model, it reports it. Competing monitors on the same streams are not better: the conformal martingale alarms in $0.50$--$1.00$ of $3L$ in-distribution streams and CUSUM in $0.20$--$0.60$.
+
+\input{tab_models}
 
 \subsection{Comparison with competitor monitors on the simulator}\label{sec:exp-baselines}
 

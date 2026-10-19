@@ -68,11 +68,12 @@ experiments/
   exp7_ablations.py     Bet, tolerance, drift shape, statistic, noise tails
   exp8_real_replication.py  Replicated real-video study (30 splits) with competitors
   exp9_simlemma.py      Certified total-variation bound vs closed-form truth
+  exp10_gated_control.py Planner with a neural dynamics model gated by the frontier
   real_data/            Moving MNIST / KTH loaders and the PCA+linear world model
   gpu/                  Neural world-model monitors (single illustrative runs)
 tests/                  Ville control, CS coverage (time-varying means), power, scores
 results/                JSON outputs and figures of the simulator experiments
-paper/                  Manuscript (TMLR format) and tables
+paper/                  Manuscript (Neural Networks / elsarticle) and tables
 ```
 
 ## Results (see paper/ for the full account)
@@ -83,9 +84,13 @@ paper/                  Manuscript (TMLR format) and tables
   monitors calibrated on exogenous data inflate false alarms (CUSUM and a conformal
   martingale reach 1.00 when the planner seeks high-noise states); ATLAS stays at or
   below 0.013. Power depends on where the planner steers.
-- **Real video, replicated.** Moving MNIST speed shift and two KTH shifts over 30 random
-  splits against CUSUM, ADWIN, KSWIN and a conformal martingale. ATLAS detects every
-  shift; false-alarm control needs a tolerance margin (`k >= 0.25-1` standard deviations).
+- **Gated planning.** A planner with a neural dynamics model, gated by the frontier, under
+  three faults: lowest mean post-fault cost for margins k <= 1, no fault-free cost, slower
+  than CUSUM on an abrupt fault.
+- **Real video, replicated.** Moving MNIST speed shift and two KTH shifts, with linear,
+  conv-autoencoder and frozen-encoder world models, against CUSUM, ADWIN, KSWIN and a
+  conformal martingale. False-alarm control needs a tolerance margin; the frozen-encoder
+  model reaches 0 false alarms with detection 0.9-1.0 at k = 1.
 - **Negative results.** Pooling overlapping horizon chains does not recover the discarded
   data; a constant tolerance calibrated on pooled data voids the conditional guarantee.
 

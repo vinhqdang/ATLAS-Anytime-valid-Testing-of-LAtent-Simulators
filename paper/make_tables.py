@@ -72,3 +72,55 @@ def control_table():
 
 
 control_table()
+
+
+# ----------------------------------------------------------------- model-class table
+def models_table():
+    files = [("mnist", "Moving MNIST speed", [("exp8_mnist", "PCA + linear (30 splits)"),
+                                              ("exp8n_mnist", "conv. autoencoder (10)")]),
+             ("kth", "KTH walking$\\to$running", [("exp8_kth", "PCA + linear (30)"),
+                                                   ("exp8n_kth", "conv. autoencoder (10)"),
+                                                   ("exp8j_kth", "frozen ResNet + dynamics (10)")]),
+             ("domain", "KTH outdoor$\\to$indoor", [("exp8_domain", "PCA + linear (30)"),
+                                                     ("exp8n_domain", "conv. autoencoder (10)"),
+                                                     ("exp8j_domain", "frozen ResNet + dynamics (10)")])]
+    cols = [("ATLAS(eps+0.5sd)", "ATLAS $k{=}0.5$"), ("ATLAS(eps+1.0sd)", "ATLAS $k{=}1$"),
+            ("CUSUM", "CUSUM"), ("Conformal MG", "conformal MG")]
+    cap = ("Three world-model classes on the same real shifts. Each cell: false-alarm rate over $3L$ in-distribution "
+           "clips / detection rate / mean delay in clips (``--'' if never detected); repetitions in parentheses. "
+           "ADWIN and KSWIN, tuned to 5\\% on separate repetitions, almost never detected a shift with the neural models (one exception: ADWIN in 2 of 10 repetitions of the conv.\\ autoencoder on the domain shift) and are omitted.")
+    out = ["\\begin{table}[t]\\centering", "\\caption{" + cap + "}", "\\label{tab:models}", "\\small",
+           "\\setlength{\\tabcolsep}{3pt}", "\\begin{tabular}{@{}ll" + "c" * len(cols) + "@{}}", "\\toprule",
+           "shift & world model & " + " & ".join(c[1] for c in cols) + " \\\\", "\\midrule"]
+    for key, name, models in files:
+        first = True
+        for fn, lab in models:
+            p = os.path.join(R, fn + ".json")
+            if not os.path.exists(p):
+                continue
+            S = json.load(open(p))["summary"]
+            cells = []
+            for ck, _ in cols:
+                r = S[ck]
+                d = "--" if r["delay"][0] != r["delay"][0] else f"{r['delay'][0]:.1f}"
+                cells.append(f"{r['fa_3L'][0]:.2f} / {r['det'][0]:.2f} / {d}")
+            out.append((name if first else "") + f" & {lab} & " + " & ".join(cells) + " \\\\")
+            first = False
+        out.append("\\midrule")
+    out[-1] = "\\bottomrule"
+    out += ["\\end{tabular}", "\\end{table}"]
+    open(os.path.join(os.path.dirname(__file__), "tab_models.tex"), "w").write("\n".join(out) + "\n")
+
+
+models_table()
+
+
+# fit every generated table to the text width
+for name in ("tab_real.tex", "tab_control.tex", "tab_models.tex"):
+    p = os.path.join(os.path.dirname(__file__), name)
+    if os.path.exists(p):
+        t = open(p).read()
+        if "\\resizebox" not in t:
+            t = t.replace("\\begin{tabular}", "\\resizebox{\\textwidth}{!}{\\begin{tabular}").replace(
+                "\\end{tabular}", "\\end{tabular}}")
+            open(p, "w").write(t)

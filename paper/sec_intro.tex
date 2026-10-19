@@ -53,26 +53,28 @@ unfaithful horizon.
 \paragraph{What is and is not new.}
 Betting e-processes and confidence sequences are not new, and neither is sequential forecast
 evaluation with e-values (Section~\ref{sec:related}). We do not claim a new inference principle. The
-contributions are the problem formalization for deployed world models, the analysis of what breaks
-when the target is multi-step, and a body of evidence about when the construction works and when it
+contributions are the problem formalization for deployed neural world models, the analysis of what breaks
+when the target is multi-step and the planner steers the data, and evidence on when the construction works and when it
 does not:
 
 \begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
 \item \textbf{Formalization and multi-step validity} (Sections~\ref{sec:setup}--\ref{sec:method}).
 A horizon-indexed, conditional-mean faithfulness null with a tolerance, a statistic whose
 conditional mean is the object of interest, and an analysis of why consecutive $h$-step residuals
-cannot be bet on directly. We validate on non-overlapping chains and show, as a negative result, that the
-obvious attempt to recover the discarded data by pooling offset chains does not help.
+cannot be bet on directly. We validate on non-overlapping chains, show that pooling offset chains does not help, and
+give a recipe for neural world models whose multi-step predictive is available only by sampling: the planner commits to an
+action block, which makes the predictive well defined for every horizon inside the block (Section~\ref{sec:neural}).
 \item \textbf{Two dual guarantees} (Section~\ref{sec:theory}): time-uniform false-revocation control;
 a confidence sequence for the running average of \emph{conditional} means (the constant-mean
 construction does not certify it); a windowed variant; and a per-horizon total-variation
 certificate with a simulation-lemma-style value-gap consequence.
 \item \textbf{A finite-sample delay bound} replacing the asymptotic statement, with a
 horizon-resolved growth rate that predicts measured delay across horizons.
-\item \textbf{Evidence} (Section~\ref{sec:experiments}): ground-truth validation including the delay
-law and the certificate; a closed-loop study where the planner steers the stream; a replicated
-real-video study with competitor monitors on identical streams; and ablations that include the
-cases where design choices fail.
+\item \textbf{Evidence} (Section~\ref{sec:experiments}): ground-truth validation; a closed-loop study where the
+planner steers the stream; a controlled study in which a neural-dynamics planner is \emph{gated} by the frontier under
+three faults, which measures whether the certificate improves control; replicated real-video experiments with three
+world-model classes and competitor monitors on identical streams; and ablations that include the cases where design
+choices fail.
 \end{enumerate}
 
 \subsection{Related work}\label{sec:related}
